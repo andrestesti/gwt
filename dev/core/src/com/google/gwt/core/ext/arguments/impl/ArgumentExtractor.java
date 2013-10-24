@@ -24,13 +24,8 @@ import java.io.IOException;
  * Extracts an argument list.
  */
 public class ArgumentExtractor {
-
-  public static String getRequestTypeName(JClassType type) {
-    GwtCreateRequest args = type.getAnnotation(GwtCreateRequest.class);
-    if (args != null) {
-      return args.typeName();
-    }
-    return type.getName();
+  
+  private ArgumentExtractor() {
   }
 
   public static JArgument[] getArguments(JClassType type) {
@@ -52,10 +47,15 @@ public class ArgumentExtractor {
     return arguments;
   }
 
-  public static boolean hasArguments(JClassType type) {
-    return type.isAnnotationPresent(GwtCreateRequest.class);
+  public static String getRequestTypeName(JClassType type) {
+    GwtCreateRequest args = type.getAnnotation(GwtCreateRequest.class);
+    if (args != null) {
+      return args.typeName();
+    }
+    return type.getName();
   }
 
-  private ArgumentExtractor() {
+  public static boolean hasArguments(JClassType type) {
+    return type.isAnnotationPresent(GwtCreateRequest.class);
   }
 }
