@@ -100,6 +100,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
    * Special serialization treatment.
    */
   private transient JAbstractMethodBody body = null;
+  private CodegenSupport codegenSupport = null;
   private final JDeclaredType enclosingType;
   private boolean isAbstract;
   private boolean isFinal;
@@ -223,6 +224,10 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
   public JAbstractMethodBody getBody() {
     assert !isExternal() : "External types do not have method bodies.";
     return body;
+  }
+  
+  public CodegenSupport getCodegenSupport() {
+    return codegenSupport;
   }
 
   public JDeclaredType getEnclosingType() {
@@ -369,6 +374,10 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     }
   }
 
+  public void setCodegenSupport(CodegenSupport codegenSupport) {
+    this.codegenSupport = codegenSupport;
+  }
+  
   public void setFinal() {
     isFinal = true;
   }

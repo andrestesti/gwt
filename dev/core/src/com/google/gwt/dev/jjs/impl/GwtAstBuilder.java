@@ -22,6 +22,7 @@ import com.google.gwt.dev.jjs.InternalCompilerException;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
 import com.google.gwt.dev.jjs.ast.AccessModifier;
+import com.google.gwt.dev.jjs.ast.CodegenSupport;
 import com.google.gwt.dev.jjs.ast.JAbsentArrayDimension;
 import com.google.gwt.dev.jjs.ast.JArrayLength;
 import com.google.gwt.dev.jjs.ast.JArrayRef;
@@ -116,6 +117,7 @@ import org.eclipse.jdt.internal.compiler.ast.AND_AND_Expression;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
+import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ArrayAllocationExpression;
@@ -194,6 +196,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
@@ -210,6 +213,7 @@ import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -3200,6 +3204,65 @@ public class GwtAstBuilder {
     enclosingType.addField(field);
     typeMap.setField(binding, field);
   }
+  
+  /**
+   * Add codegen support to a method if annotations are present. 
+   * Validations are performed in {@link UnifyAst}.
+   */
+  private void addCodegenSupport(JMethod method, AbstractMethodDeclaration x) {
+    if (x.annotations == null) {
+      return;
+    }
+    boolean isCodegenMethod = false;
+    String typeName = null;
+    for (Annotation a : x.annotations) {
+      ReferenceBinding binding = (ReferenceBinding) a.resolvedType;
+      String name = CharOperation.toString(binding.compoundName);
+      if (name.equals("com.google.gwt.core.shared.GwtCreate")) {
+        isCodegenMethod = true;
+        for (ElementValuePair p : a.computeElementValuePairs()) {
+          String fieldName = CharOperation.charToString(p.getName());
+          if ("type".equals(fieldName)) {
+            TypeBinding typeBinding = (TypeBinding) p.getValue();
+            typeName =
+                String.valueOf(typeBinding.qualifiedPackageName()) + "."
+                    + String.valueOf(typeBinding.qualifiedSourceName());
+            break;
+          }
+        }
+        break;
+      }
+    }
+    if (isCodegenMethod) {
+      int typeParamIndex = -1;
+      List<Integer> ctorParamIndices = new ArrayList<Integer>();
+      if (x.arguments != null) {
+        for (int i = 0; i < x.arguments.length; i++) {
+          Argument arg = x.arguments[i];
+          if (arg.annotations != null) {
+            for (Annotation a : arg.annotations) {
+              ReferenceBinding binding = (ReferenceBinding) a.resolvedType;
+              String name = CharOperation.toString(binding.compoundName);
+              if (name.equals("com.google.gwt.core.shared.GwtCreate$Type")) {
+                if (typeParamIndex != -2) {
+                  if (typeParamIndex > -1) {
+                    typeParamIndex = -2;
+                  } else {
+                    typeParamIndex = i;
+                  }
+                }
+              } else if (name.equals("com.google.gwt.core.shared.GwtCreate$Param")) {
+                ctorParamIndices.add(i);
+              }
+            }
+          }
+        }
+      }
+      CodegenSupport support =
+          new CodegenSupport(method, typeName, typeParamIndex, ctorParamIndices);
+      method.setCodegenSupport(support);
+    }
+  }
 
   private void createMembers(TypeDeclaration x) {
     SourceTypeBinding binding = x.binding;
@@ -3316,6 +3379,8 @@ public class GwtAstBuilder {
 
     // User args.
     createParameters(method, x);
+    
+    addCodegenSupport(method, x);
 
     if (x.isConstructor()) {
       if (isNested) {
