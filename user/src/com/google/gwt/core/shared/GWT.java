@@ -46,18 +46,23 @@ public final class GWT {
   /**
    * Instantiates a class via deferred binding.
    * 
-   * <p>
-   * The argument to {@link #create(Class)}&#160;<i>must</i> be a class literal
-   * because the Production Mode compiler must be able to statically determine
-   * the requested type at compile-time. This can be tricky because using a
-   * {@link Class} variable may appear to work correctly in Development Mode.
-   * </p>
-   * 
-   * @param classLiteral a class literal specifying the base class to be
+   * @param type a type specifying the base class to be
    *          instantiated
    * @return the new instance, which must be cast to the requested class
    */
-  public static <T> T create(Class<?> classLiteral) {
+  public static <T> T create(Class<?> type) {
+    return create(type, new Object[0]);
+  }
+  
+  /**
+   * Instantiates a class via deferred binding.
+   * 
+   * @param type a type specifying the base class to be
+   *          instantiated
+   * @param args argument list for parameterized constructors and generators.
+   * @return the new instance, which must be cast to the requested class
+   */
+  public static <T> T create(Class<?> type, Object...args) {
     if (sGWTBridge == null) {
       /*
        * In Production Mode, the compiler directly replaces calls to this method
@@ -69,7 +74,7 @@ public final class GWT {
               + "check that your test case extends GWTTestCase and that GWT.create() "
               + "is not called from within an initializer or constructor.");
     } else {
-      return sGWTBridge.<T> create(classLiteral);
+      return sGWTBridge.<T> create(type, args);
     }
   }
 

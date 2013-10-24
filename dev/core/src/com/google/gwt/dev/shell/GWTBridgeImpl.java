@@ -38,15 +38,26 @@ public class GWTBridgeImpl extends GWTBridge {
   public GWTBridgeImpl(ShellJavaScriptHost host) {
     this.host = host;
   }
+  
+  /**
+   * @deprecated use {@link GWTBridgeImpl#create(Class, Object[])}.
+   * 
+   * Resolves a deferred binding request and create the requested object.
+   */
+  @Deprecated
+  @Override
+  public <T> T create(Class<?> requestedClass) {
+    return create(requestedClass, new Object[0]);
+  }
 
   /**
    * Resolves a deferred binding request and create the requested object.
    */
   @Override
-  public <T> T create(Class<?> requestedClass) {
+  public <T> T create(Class<?> requestedClass, Object[] args) {
     String className = requestedClass.getName();
     try {
-      return host.<T> rebindAndCreate(className);
+      return host.<T> rebindAndCreate(className, args);
     } catch (Throwable e) {
       String msg = "Deferred binding failed for '" + className
           + "' (did you forget to inherit a required module?)";

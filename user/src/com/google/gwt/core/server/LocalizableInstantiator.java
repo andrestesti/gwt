@@ -29,28 +29,37 @@ import com.google.gwt.i18n.shared.GwtLocale;
  */
 class LocalizableInstantiator extends ClassInstantiatorBase implements ClassInstantiator {
 
+  /**
+   * @deprecated use {@link LocalizableInstantiator#create(Class, Object[], Properties)}.
+   */
+  @Deprecated
   @Override
   public <T> T create(Class<?> clazz, Properties properties) {
+    return create(clazz, new Object[0], properties);
+  }
+
+  @Override
+  public <T> T create(Class<?> clazz, Object[] args, Properties properties) {
     String pkgName = clazz.getPackage().getName();
     Class<?> enclosingClass = clazz.getEnclosingClass();
     String className = clazz.getSimpleName();
     GwtLocale locale = ServerGwtBridge.getLocale(properties);
     for (GwtLocale search : locale.getCompleteSearchList()) {
       String suffix = "_" + search.getAsString();
-      T obj = this.<T>tryCreate(pkgName + "." + className + suffix);
+      T obj = this.<T>tryCreate(pkgName + "." + className + suffix, args);
       if (obj != null) {
         return obj;
       }
-      obj = this.<T>tryCreate(pkgName + ".impl." + className + suffix);
+      obj = this.<T>tryCreate(pkgName + ".impl." + className + suffix, args);
       if (obj != null) {
         return obj;
       }
-      obj = this.<T>tryCreate(pkgName + "." + className + "Impl" + suffix);
+      obj = this.<T>tryCreate(pkgName + "." + className + "Impl" + suffix, args);
       if (obj != null) {
         return obj;
       }
       if (enclosingClass != null) {
-        obj = this.<T>tryCreate(enclosingClass.getCanonicalName() + "$" + className + suffix);
+        obj = this.<T>tryCreate(enclosingClass.getCanonicalName() + "$" + className + suffix, args);
         if (obj != null) {
           return obj;
         }

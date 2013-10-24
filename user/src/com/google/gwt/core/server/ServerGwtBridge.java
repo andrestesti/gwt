@@ -22,6 +22,8 @@ import com.google.gwt.i18n.shared.GwtLocale;
 import com.google.gwt.i18n.shared.GwtLocaleFactory;
 import com.google.gwt.i18n.shared.Localizable;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +42,8 @@ public class ServerGwtBridge extends GWTBridge {
   public interface ClassInstantiator {
 
     /**
+     * @deprecated use {@link ClassInstantiator#create(Class, Object[], Properties)}
+     * 
      * Create an instance given a base class.  The created class may be a
      * subtype of the requested class.
      * 
@@ -48,7 +52,21 @@ public class ServerGwtBridge extends GWTBridge {
      * @param properties 
      * @return instance or null if unable to create
      */
+    @Deprecated
     <T> T create(Class<?> baseClass, Properties properties);
+    
+    /**
+     * 
+     * Create an instance given a base class.  The created class may be a
+     * subtype of the requested class.
+     * 
+     * @param <T>
+     * @param baseClass
+     * @param args
+     * @param properties 
+     * @return instance or null if unable to create
+     */
+    <T> T create(Class<?> baseClass, Object[] args, Properties properties);
   }
 
   /**
@@ -58,30 +76,68 @@ public class ServerGwtBridge extends GWTBridge {
   public abstract static class ClassInstantiatorBase implements ClassInstantiator {
 
     /**
+     * @deprecated use {@link ClassInstantiatorBase#tryCreate(Class, Object[])}.
+     * 
      * @param <T>
      * @param clazz
      * @return class instance or null
      */
     protected <T> T tryCreate(Class<T> clazz) {
-      try {
-        T obj = clazz.newInstance();
-        return obj;
-      } catch (InstantiationException e) {
-      } catch (IllegalAccessException e) {
+      return tryCreate(clazz, new Object[0]);
+    }
+    
+    /**
+     * @param baseClass
+     * @param args
+     * @return
+     */
+    protected <T> T tryCreate(Class<T> clazz, Object[] args) {
+      if (args.length > 0) {
+        for (Constructor<?> c : clazz.getConstructors()) {
+          try {
+            @SuppressWarnings("unchecked")
+            T obj = (T) c.newInstance(args);
+            return obj;
+          } catch (InstantiationException e) {
+          } catch (IllegalAccessException e) {
+          } catch (IllegalArgumentException e) {
+          } catch (InvocationTargetException e) {
+          }
+        }
+        return null;
+      } else {
+        try {
+          T obj = clazz.newInstance();
+          return obj;
+        } catch (InstantiationException e) {
+        } catch (IllegalAccessException e) {
+        }
+        return null;
       }
-      return null;
     }
 
     /**
+     * @deprecated use {@link ClassInstantiatorBase#tryCreate(String, Object[])}. 
+     * 
      * @param <T>
      * @param className
      * @return class instance or null
      */
     protected <T> T tryCreate(String className) {
+      return tryCreate(className, new Object[0]);
+    }
+    
+    /**
+     * @param <T>
+     * @param className
+     * @param args
+     * @return class instance or null
+     */
+    protected <T> T tryCreate(String className, Object[] args) {
       try {
         Class<?> clazz = Class.forName(className);
         @SuppressWarnings("unchecked")
-        T obj = (T) tryCreate(clazz);
+        T obj = (T) tryCreate(clazz, args);
         return obj;
       } catch (ClassNotFoundException e) {
       }
@@ -215,9 +271,18 @@ public class ServerGwtBridge extends GWTBridge {
     register(Object.class, new ObjectNew());
     register(Localizable.class, new LocalizableInstantiator());
   }
+  
+  /**
+   * @deprecated use {@link ServerGwtBridge#create(Class, Object[])}}
+   */
+  @Deprecated
+  @Override
+  public <T> T create(Class<?> type) {
+    return create(type, new Object[0]);
+  }
 
   @Override
-  public <T> T create(Class<?> classLiteral) {
+  public <T> T create(Class<?> type, Object[] args) {
     synchronized (instantiatorsLock) {
       // Start at the root, and find the bottom-most node that our type
       // is assignable to.
@@ -228,7 +293,7 @@ public class ServerGwtBridge extends GWTBridge {
         found = false;
         Node node = stack.peek();
         for (Node child : node.children) {
-          if (child.type.isAssignableFrom(classLiteral)) {
+          if (child.type.isAssignableFrom(type)) {
             found = true;
             stack.push(child);
             break;
@@ -241,13 +306,13 @@ public class ServerGwtBridge extends GWTBridge {
       while (!stack.isEmpty()) {
         Node node = stack.pop();
         for (ClassInstantiator inst : node.instantiators) {
-          T obj = inst.<T>create(classLiteral, properties);
+          T obj = inst.<T>create(type, args, properties);
           if (obj != null) {
             return obj;
           }
         }
       }
-      throw new RuntimeException("No instantiator created " + classLiteral.getCanonicalName());
+      throw new RuntimeException("No instantiator created " + type.getCanonicalName());
     }
   }
 

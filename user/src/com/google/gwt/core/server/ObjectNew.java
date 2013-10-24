@@ -23,9 +23,19 @@ import com.google.gwt.core.server.ServerGwtBridge.Properties;
  * resort.
  */
 final class ObjectNew extends ClassInstantiatorBase {
+  /**
+   * @deprecated use {@link ObjectNew#create(Class, Object[], Properties)}.
+   */
+  @Deprecated
   @SuppressWarnings("unchecked")
   @Override
   public <T> T create(Class<?> clazz, Properties properties) {
-    return tryCreate((Class<T>) clazz);
+    return create(clazz, new Object[0], properties);
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T> T create(Class<?> clazz, Object[] args, Properties properties) {
+    return tryCreate((Class<T>) clazz, args);
   }
 }

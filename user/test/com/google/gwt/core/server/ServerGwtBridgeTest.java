@@ -228,10 +228,15 @@ public class ServerGwtBridgeTest extends TestCase {
   public void testLastOverrides() {
     ServerGwtBridge thisBridge = new ServerGwtBridge();
     thisBridge.register(Object.class, new ClassInstantiatorBase() {
+      @Deprecated
       @SuppressWarnings("unchecked")
       @Override
       public <T> T create(Class<?> baseClass, Properties properties) {
-        return (T) tryCreate(BarImpl.class);
+        return (T) create(BarImpl.class, new Object[0], properties);
+      }
+      @Override
+      public <T> T create(Class<?> baseClass, Object[] args, Properties properties) {
+        return (T) tryCreate(BarImpl.class, args);
       }
     });
     Object obj = thisBridge.create(Boo.class);

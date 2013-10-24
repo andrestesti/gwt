@@ -452,8 +452,18 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     }
   }
 
+  /**
+   * @deprecated use {@link ModuleSpace#rebindAndCreate(String, Object[])}.
+   */
+  @Deprecated
   @SuppressWarnings("unchecked")
   public <T> T rebindAndCreate(String requestedClassName)
+      throws UnableToCompleteException {
+    return rebindAndCreate(requestedClassName, new Object[0]);
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T> T rebindAndCreate(String requestedClassName, Object[] args)
       throws UnableToCompleteException {
     assert Name.isBinaryName(requestedClassName);
     Throwable caught = null;

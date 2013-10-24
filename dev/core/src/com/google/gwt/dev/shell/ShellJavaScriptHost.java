@@ -115,8 +115,17 @@ public interface ShellJavaScriptHost {
   void log(String message, Throwable e);
 
   /**
+   * @deprecated use {@link ShellJavaScriptHost#rebindAndCreate(String, Object[])}.
+   * 
    * Resolves a deferred binding request and create the requested object.
    */
+  @Deprecated
   <T> T rebindAndCreate(String requestedTypeName)
+      throws UnableToCompleteException;
+  
+  /**
+   * Resolves a deferred binding request and create the requested object.
+   */
+  <T> T rebindAndCreate(String requestedTypeName, Object[] args)
       throws UnableToCompleteException;
 }

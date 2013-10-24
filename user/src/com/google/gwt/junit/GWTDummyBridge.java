@@ -33,12 +33,21 @@ class GWTDummyBridge extends GWTBridge {
   private boolean fakeMessages = false;
   
   /**
+   * @deprecated use {@link GWTDummyBridge#create(Class, Object[])}.
+   */
+  @Deprecated
+  @Override
+  public <T> T create(Class<?> type) {
+    return create(type, new Object[0]);
+  }
+  
+  /**
    * Returns null.
    */
   @Override
-  public <T> T create(Class<?> classLiteral) {
-    if (fakeMessages && (classLiteral != null ) && Messages.class.isAssignableFrom(classLiteral)) {
-      return (T) FakeMessagesMaker.create((Class<? extends Messages>) classLiteral);
+  public <T> T create(Class<?> type, Object[] args) {
+    if (fakeMessages && (type != null ) && Messages.class.isAssignableFrom(type)) {
+      return (T) FakeMessagesMaker.create((Class<? extends Messages>) type);
     } else {
       return null;
     }

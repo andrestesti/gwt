@@ -21,7 +21,13 @@ package com.google.gwt.core.shared;
  */
 public abstract class GWTBridge {
 
-  public abstract <T> T create(Class<?> classLiteral);
+  /**
+   * @deprecated use {@link GWTBridge#create(Class, Object[])} instead.
+   */
+  @Deprecated
+  public abstract <T> T create(Class<?> type);
+  
+  public abstract <T> T create(Class<?> type, Object[] args);
 
   public String getThreadUniqueID() {
     return "";
