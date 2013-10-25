@@ -26,6 +26,7 @@ import com.google.gwt.dev.jjs.InternalCompilerException;
 import com.google.gwt.dev.jjs.JJSOptions;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
+import com.google.gwt.dev.jjs.ast.CodegenSupport;
 import com.google.gwt.dev.jjs.ast.Context;
 import com.google.gwt.dev.jjs.ast.HasName;
 import com.google.gwt.dev.jjs.ast.JArrayType;
@@ -56,6 +57,7 @@ import com.google.gwt.dev.jjs.ast.JNewInstance;
 import com.google.gwt.dev.jjs.ast.JNode;
 import com.google.gwt.dev.jjs.ast.JNonNullType;
 import com.google.gwt.dev.jjs.ast.JNullLiteral;
+import com.google.gwt.dev.jjs.ast.JParameter;
 import com.google.gwt.dev.jjs.ast.JPrimitiveType;
 import com.google.gwt.dev.jjs.ast.JProgram;
 import com.google.gwt.dev.jjs.ast.JReferenceType;
@@ -264,7 +266,9 @@ public class UnifyAst {
         // Should not have an overridden type at this point.
         assert x.getType() == target.getType();
       }
-      flowInto(target);
+      if (ensureCodegenMethodCall(x)) {
+        flowInto(target);
+      }
     }
 
     @Override
@@ -367,6 +371,98 @@ public class UnifyAst {
       return !magicMethodCalls.contains(target);
     }
 
+    private boolean ensureCodegenMethod(JMethod x) {
+
+      CodegenSupport support = x.getCodegenSupport();
+      if (support == null) {
+        return true;
+      }
+
+      // Validate type params consistency
+      if (support.hasMultipleTypeParam()) {
+        error(x, "Too much type parameters");
+        return false;
+      }
+      if (support.getTypeName() != null) {
+        if (support.hasTypeParam()) {
+          error(x, "Type parameter already defined in @GwtCreate annotation");
+          return false;
+        }
+      } else if (!support.hasTypeParam()) {
+        error(x, "Type parameter is required");
+        return false;
+      }
+      if (support.getCtorParamIndices().contains(support.getTypeParamIndex())) {
+        error(x, "Type parameter can't be already a constructor parameter");
+        return false;
+      }
+      if (support.hasTypeParam()) {
+        JParameter typeParam = support.getTypeParam();
+        if (!"java.lang.Class".equals(typeParam.getType().getName())) {
+          error(x, "Type parameter must be of type java.lang.Class");
+          return false;
+        }
+        if (!typeParam.isFinal()) {
+          error(x, "Type parameter must be final");
+          return false;
+        }
+      } else if (support.getCtorParamIndices().isEmpty()) {
+        error(x, "Method must have a type parameter if constructor parameters aren't present");
+        return false;
+      }
+      for (int i : support.getCtorParamIndices()) {
+        if (!x.getParams().get(i).isFinal()) {
+          error(x, "code-gen constructor parameters must be final");
+          return false;
+        }
+      }
+      // Adapt method for code-gen
+      JDeclaredType factoryIntf = program.getIndexedType("GwtCreateFactory");
+      assert factoryIntf != null;
+      JParameter factoryParam =
+          new JParameter(x.getSourceInfo(), "$factory", factoryIntf, true, false, x);
+      x.addParam(factoryParam);
+      support.setFactoryParam(factoryParam);
+
+      return true;
+    }
+
+    private boolean ensureCodegenMethodCall(JMethodCall x) {
+      if (!ensureCodegenMethod(x.getTarget())) {
+        return false;
+      }
+      CodegenSupport support = x.getTarget().getCodegenSupport();
+      if (support == null) {
+        return true;
+      }
+      ArrayList<JExpression> ctorArgs = new ArrayList<JExpression>();
+      List<JExpression> args = x.getArgs();
+      for (Integer i : support.getCtorParamIndices()) {
+        ctorArgs.add(args.get(i));
+      }
+      String typeName;
+      if (support.hasTypeParam()) {
+        JExpression typeParam = args.get(support.getTypeParamIndex());
+        if (!(typeParam instanceof JClassLiteral)) {
+          error(x, "Only class literals may be used as type arguments to codegen methods");
+          return false;
+        }
+        JClassLiteral classLiteral = (JClassLiteral) typeParam;
+        if (!(classLiteral.getRefType() instanceof JDeclaredType)) {
+          error(x, "Only classes and interfaces may be used as type arguments to codegen methods");
+          return false;
+        }
+        typeName = JGwtCreate.nameOf(classLiteral.getRefType());
+      } else {
+        typeName = support.getTypeName();
+      }
+      JExpression factory = newGwtCreateFactory(x, typeName, ctorArgs);
+      if (factory != null) {
+        x.addArg(factory);
+      }
+      return true;
+    }
+
     private JExpression handleGwtCreate(JMethodCall x) {
       assert (x.getArgs().size() == 1);
       JExpression arg = x.getArgs().get(0);
@@ -466,6 +562,11 @@ public class UnifyAst {
         return handleImplNameOf(x);
       }
       throw new InternalCompilerException("Unknown magic method");
+    }
+
+    private JExpression newGwtCreateFactory(JMethodCall x, String typeName,
+        ArrayList<JExpression> ctorArgs) {
+      return null;
     }
   }
 
@@ -774,6 +875,10 @@ public class UnifyAst {
         if (method.canBePolymorphic()) {
           for (JMethod upref : collected.get(method.getSignature())) {
             if (canAccessSuperMethod(type, upref)) {
+              if (!method.hasIsomorphicCodegenSignature(upref)) {
+                error(method, "Overriding method must complain the codegen signature");
+                return;
+              }
               method.addOverride(upref);
             }
           }

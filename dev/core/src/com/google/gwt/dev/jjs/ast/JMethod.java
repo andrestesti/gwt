@@ -208,7 +208,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
   public boolean canBePolymorphic() {
     return !isStatic() && !isPrivate();
   }
-
+  
   public void freezeParamTypes() {
     List<JType> paramTypes = new ArrayList<JType>();
     for (JParameter param : params) {
@@ -285,6 +285,47 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
 
   public JType getType() {
     return returnType;
+  }
+  
+  /**
+   * Determines if this method has an isomorphic codegen signature with another
+   * method. This would check if an overriding method chain complains the 
+   * codegen signature.
+   */
+  public boolean hasIsomorphicCodegenSignature(JMethod other) {
+    CodegenSupport otherCodegenSignature = other.getCodegenSupport();
+    if (codegenSupport == null) {
+      return otherCodegenSignature == null;
+    }
+    if (otherCodegenSignature == null) {
+      return false;
+    }
+    if (codegenSupport.hasTypeParam()) {
+      if (!otherCodegenSignature.hasTypeParam()) {
+        return false;
+      }
+      if (codegenSupport.getTypeParamIndex() != otherCodegenSignature.getTypeParamIndex()) {
+        return false;
+      }
+    } else {
+      if (otherCodegenSignature.hasTypeParam()) {
+        return false;
+      }
+      if (!codegenSupport.getTypeName().equals(otherCodegenSignature.getTypeName())) {
+        return false;
+      }
+    }
+    List<Integer> methodIndices = codegenSupport.getCtorParamIndices();
+    List<Integer> uprefIndices = otherCodegenSignature.getCtorParamIndices();
+    if (methodIndices.size() != uprefIndices.size()) {
+      return false;
+    }
+    for (int i = 0; i < methodIndices.size(); i++) {
+      if (!methodIndices.get(i).equals(uprefIndices.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public boolean isAbstract() {

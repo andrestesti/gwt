@@ -63,10 +63,16 @@ public class CodegenSupport implements Serializable {
     return typeParamIndex;
   }
 
+  /**
+   * Determines if there are multiple parameters for the type.
+   */
   public boolean hasMultipleTypeParam() {
     return typeParamIndex < -1;
   }
 
+  /**
+   * Determines if the type is a parameter.
+   */
   public boolean hasTypeParam() {
     return typeParamIndex >= 0;
   }
