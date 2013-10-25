@@ -17,6 +17,7 @@ package com.google.gwt.dev.jdt;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.dev.javac.CompilationState;
 import com.google.gwt.dev.javac.StandardGeneratorContext;
 
@@ -37,6 +38,12 @@ public interface RebindPermutationOracle {
    * Always answers with at least one name.
    */
   String[] getAllPossibleRebindAnswers(TreeLogger logger, String sourceTypeName)
+      throws UnableToCompleteException;
+  
+  /**
+   * Always answers with at least one name.
+   */
+  String[] getAllPossibleRebindAnswers(TreeLogger logger, String sourceTypeName, JArgument[] args)
       throws UnableToCompleteException;
 
   /**

@@ -20,6 +20,7 @@ import com.google.gwt.dev.util.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -31,24 +32,37 @@ public class JGwtCreate extends JExpression {
 
   public static JExpression createInstantiationExpression(SourceInfo info, JClassType classType,
       JDeclaredType enclosingType) {
+    return createInstantiationExpression(info, classType, enclosingType, Collections
+        .<JExpression> emptyList());
+  }
+  
+  public static JExpression createInstantiationExpression(SourceInfo info, JClassType classType,
+      JDeclaredType enclosingType, List<JExpression> arguments) {
     /*
-     * Find the appropriate (noArg) constructor. In our AST, constructors are
+     * Find the appropriate constructor. In our AST, constructors are
      * instance methods that should be qualified with a new expression.
      */
-    JConstructor noArgCtor = null;
+    // TODO typecheck is required!
+    int size = arguments.size();
+    JConstructor rightCtor = null;
     for (JMethod ctor : classType.getMethods()) {
       if (ctor instanceof JConstructor) {
-        if (ctor.getOriginalParamTypes().size() == 0) {
-          noArgCtor = (JConstructor) ctor;
+        if (ctor.getOriginalParamTypes().size() == size) {
+          if (rightCtor != null) {
+            return null;
+          }
+          rightCtor = (JConstructor) ctor;
           break;
         }
       }
     }
-    if (noArgCtor == null) {
+    if (rightCtor == null) {
       return null;
     }
     // Call it, using a new expression as a qualifier
-    return new JNewInstance(info, noArgCtor, enclosingType);
+    JNewInstance instantiation = new JNewInstance(info, rightCtor, enclosingType);
+    instantiation.addArgs(arguments);
+    return instantiation;
   }
 
   /**

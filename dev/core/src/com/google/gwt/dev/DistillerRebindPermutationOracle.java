@@ -17,6 +17,7 @@ package com.google.gwt.dev;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.linker.ArtifactSet;
 import com.google.gwt.dev.cfg.BindingProperty;
 import com.google.gwt.dev.cfg.ConfigurationProperty;
@@ -27,6 +28,7 @@ import com.google.gwt.dev.cfg.StaticPropertyOracle;
 import com.google.gwt.dev.javac.CompilationState;
 import com.google.gwt.dev.javac.StandardGeneratorContext;
 import com.google.gwt.dev.jdt.RebindOracle;
+import com.google.gwt.dev.jdt.RebindOracle.TypeNames;
 import com.google.gwt.dev.jdt.RebindPermutationOracle;
 import com.google.gwt.dev.shell.StandardRebindOracle;
 import com.google.gwt.dev.util.Util;
@@ -77,9 +79,15 @@ class DistillerRebindPermutationOracle implements RebindPermutationOracle {
     compilationState = null;
     generatorContext = null;
   }
+  
+  @Override
+  public String[] getAllPossibleRebindAnswers(TreeLogger logger, String sourceTypeName)
+      throws UnableToCompleteException {
+    return getAllPossibleRebindAnswers(logger, sourceTypeName, new JArgument[0]);
+  }
 
   public String[] getAllPossibleRebindAnswers(TreeLogger logger,
-      String requestTypeName) throws UnableToCompleteException {
+      String requestTypeName, JArgument[] args) throws UnableToCompleteException {
 
     String msg = "Computing all possible rebind results for '"
         + requestTypeName + "'";
@@ -88,10 +96,11 @@ class DistillerRebindPermutationOracle implements RebindPermutationOracle {
     Set<String> answers = new HashSet<String>();
     Event getAllRebindsEvent = SpeedTracerLogger.start(CompilerEventType.GET_ALL_REBINDS);
     for (int i = 0; i < getPermutationCount(); ++i) {
-      String resultTypeName = rebindOracles[i].rebind(logger, requestTypeName);
+      TypeNames typeNames = rebindOracles[i].rebind(logger, requestTypeName, args);
+      String resultTypeName = typeNames.getSubstituteTypeName();
       answers.add(resultTypeName);
       // Record the correct answer into each permutation.
-      permutations[i].putRebindAnswer(requestTypeName, resultTypeName);
+      permutations[i].putRebindAnswer(typeNames.getRequestTypeName(), resultTypeName);
     }
     String[] result = Util.toArray(String.class, answers);
     getAllRebindsEvent.end();

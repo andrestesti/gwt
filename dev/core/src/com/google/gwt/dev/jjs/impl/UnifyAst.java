@@ -17,6 +17,9 @@ package com.google.gwt.dev.jjs.impl;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
+import com.google.gwt.core.ext.arguments.JArguments;
+import com.google.gwt.core.ext.arguments.JVariableArgument;
 import com.google.gwt.dev.javac.CompilationProblemReporter;
 import com.google.gwt.dev.javac.CompilationUnit;
 import com.google.gwt.dev.javac.CompiledClass;
@@ -26,6 +29,7 @@ import com.google.gwt.dev.jjs.InternalCompilerException;
 import com.google.gwt.dev.jjs.JJSOptions;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
+import com.google.gwt.dev.jjs.ast.AccessModifier;
 import com.google.gwt.dev.jjs.ast.CodegenSupport;
 import com.google.gwt.dev.jjs.ast.Context;
 import com.google.gwt.dev.jjs.ast.HasName;
@@ -43,6 +47,7 @@ import com.google.gwt.dev.jjs.ast.JEnumType;
 import com.google.gwt.dev.jjs.ast.JExpression;
 import com.google.gwt.dev.jjs.ast.JExpressionStatement;
 import com.google.gwt.dev.jjs.ast.JField;
+import com.google.gwt.dev.jjs.ast.JField.Disposition;
 import com.google.gwt.dev.jjs.ast.JFieldRef;
 import com.google.gwt.dev.jjs.ast.JGwtCreate;
 import com.google.gwt.dev.jjs.ast.JInstanceOf;
@@ -58,6 +63,7 @@ import com.google.gwt.dev.jjs.ast.JNode;
 import com.google.gwt.dev.jjs.ast.JNonNullType;
 import com.google.gwt.dev.jjs.ast.JNullLiteral;
 import com.google.gwt.dev.jjs.ast.JParameter;
+import com.google.gwt.dev.jjs.ast.JParameterRef;
 import com.google.gwt.dev.jjs.ast.JPrimitiveType;
 import com.google.gwt.dev.jjs.ast.JProgram;
 import com.google.gwt.dev.jjs.ast.JReferenceType;
@@ -370,6 +376,50 @@ public class UnifyAst {
       // Special handling.
       return !magicMethodCalls.contains(target);
     }
+    
+    private JExpression bindGwtCreate(JNode x, JDeclaredType enclosingType, String reqType,
+        List<JExpression> args, JArgument[] genArgs) {
+      List<String> answers;
+      try {
+        answers = Lists.create(rpo.getAllPossibleRebindAnswers(logger, reqType, genArgs));
+        rpo.getGeneratorContext().finish(logger);
+      } catch (UnableToCompleteException e) {
+        error(x, "Failed to resolve '" + reqType + "' via deferred binding");
+        return null;
+      }
+
+      ArrayList<JExpression> instantiationExpressions = new ArrayList<JExpression>(answers.size());
+      for (String answer : answers) {
+        JDeclaredType answerType = searchForTypeBySource(answer);
+        if (answerType == null) {
+          error(x, "Rebind result '" + answer + "' could not be found");
+          return null;
+        }
+        if (!(answerType instanceof JClassType)) {
+          error(x, "Rebind result '" + answer + "' must be a class");
+          return null;
+        }
+        if (answerType.isAbstract()) {
+          error(x, "Rebind result '" + answer + "' cannot be abstract");
+          return null;
+        }
+        JExpression result =
+            JGwtCreate.createInstantiationExpression(x.getSourceInfo(), (JClassType) answerType,
+                enclosingType, args);
+        if (result == null) {
+          error(x, "Rebind result '" + answer + "' has no right constructors");
+          return null;
+        }
+        instantiationExpressions.add(result);
+      }
+      assert answers.size() == instantiationExpressions.size();
+      if (answers.size() == 1) {
+        return instantiationExpressions.get(0);
+      } else {
+        return new JGwtCreate(x.getSourceInfo(), reqType, answers, program.getTypeJavaLangObject(),
+            instantiationExpressions);
+      }      
+    }
 
     private boolean ensureCodegenMethod(JMethod x) {
 
@@ -464,61 +514,106 @@ public class UnifyAst {
     }
 
     private JExpression handleGwtCreate(JMethodCall x) {
-      assert (x.getArgs().size() == 1);
-      JExpression arg = x.getArgs().get(0);
-      if (!(arg instanceof JClassLiteral)) {
-        error(x, "Only class literals may be used as arguments to GWT.create()");
-        return null;
-      }
-      JClassLiteral classLiteral = (JClassLiteral) arg;
-      if (!(classLiteral.getRefType() instanceof JDeclaredType)) {
-        error(x, "Only classes and interfaces may be used as arguments to GWT.create()");
-        return null;
-      }
-      JDeclaredType type = (JDeclaredType) classLiteral.getRefType();
-      String reqType = JGwtCreate.nameOf(type);
-      List<String> answers;
-      try {
-        answers = Lists.create(rpo.getAllPossibleRebindAnswers(logger, reqType));
-        rpo.getGeneratorContext().finish(logger);
-      } catch (UnableToCompleteException e) {
-        error(x, "Failed to resolve '" + reqType + "' via deferred binding");
-        return null;
-      }
-
-      ArrayList<JExpression> instantiationExpressions = new ArrayList<JExpression>(answers.size());
-      for (String answer : answers) {
-        JDeclaredType answerType = searchForTypeBySource(answer);
-        if (answerType == null) {
-          error(x, "Rebind result '" + answer + "' could not be found");
-          return null;
+      assert (x.getArgs().size() >= 1 && x.getArgs().size() <= 2);
+      JExpression typeArg = x.getArgs().get(0);
+      List<JExpression> args = new ArrayList<JExpression>();
+      JArgument[] genArgs;
+      if (x.getArgs().size() > 1) {
+        JExpression argsExpr = x.getArgs().get(1);
+        // This can't be detected in DevMode
+        if (argsExpr instanceof JNewArray) {
+          JNewArray arrayExpr = (JNewArray) x.getArgs().get(1);
+          args.addAll(arrayExpr.initializers);
+          genArgs = new JArgument[args.size()];
+          for (int i = 0; i < genArgs.length; i++) {
+            genArgs[i] = ExpressionToArgumentTranslator.translate(args.get(i));
+          }
+        } else {
+          args.add(argsExpr);
+          genArgs = new JArgument[] {ExpressionToArgumentTranslator.translate(argsExpr)};
         }
-        if (!(answerType instanceof JClassType)) {
-          error(x, "Rebind result '" + answer + "' must be a class");
-          return null;
-        }
-        if (answerType.isAbstract()) {
-          error(x, "Rebind result '" + answer + "' cannot be abstract");
-          return null;
-        }
-        JExpression result =
-            JGwtCreate.createInstantiationExpression(x.getSourceInfo(), (JClassType) answerType,
-                currentMethod.getEnclosingType());
-        if (result == null) {
-          error(x, "Rebind result '" + answer + "' has no default (zero argument) constructors");
-          return null;
-        }
-        instantiationExpressions.add(result);
-      }
-      assert answers.size() == instantiationExpressions.size();
-      if (answers.size() == 1) {
-        return instantiationExpressions.get(0);
       } else {
-        return new JGwtCreate(x.getSourceInfo(), reqType, answers, program.getTypeJavaLangObject(),
-            instantiationExpressions);
+        genArgs = new JArgument[0];
       }
-    }
+      CodegenSupport support = null;
+      String reqType;
+      if (typeArg instanceof JParameterRef) {
+        JParameterRef paramRef = (JParameterRef) typeArg;
+        support = paramRef.getParameter().getEnclosingMethod().getCodegenSupport();
+        if (support == null) {
+          error(x, "Only code-gen type arguments may be used as first argument to GWT.create()");
+          return null;
+        }
+        reqType = null;
 
+      } else {
+        if (!(typeArg instanceof JClassLiteral)) {
+          error(x, "Only class literals may be used as first argument to GWT.create()");
+          return null;
+        }
+        JClassLiteral classLiteral = (JClassLiteral) typeArg;
+        if (!(classLiteral.getRefType() instanceof JDeclaredType)) {
+          error(x, "Only classes and interfaces may be used as first arguments to GWT.create()");
+          return null;
+        }
+        JDeclaredType type = (JDeclaredType) classLiteral.getRefType();
+        reqType = JGwtCreate.nameOf(type);
+      }
+
+      int argsSize = args.size();
+      for (int i = 0; i < argsSize; i++) {
+        JExpression a = args.get(i);
+        if (a instanceof JParameterRef) {
+          JParameterRef aRef = (JParameterRef) a;
+          CodegenSupport aSupport = aRef.getParameter().getEnclosingMethod().getCodegenSupport();
+          if (aSupport != null) {
+            if (support == null) {
+              if (i > 0) {
+                error(x,
+                    "All GWT.create constructor arguments must be code-gen method constructor arguments");
+                return null;
+              }
+              if (!reqType.equals(aSupport.getTypeName())) {
+                error(x,
+                    "All GWT.create type argument must be equals than code-gen method type argument");
+                return null;
+              }
+              support = aSupport;
+            }
+            int aIndex = support.getCtorParamIndices().get(i);
+            JParameter p = support.getMethod().getParams().get(aIndex);
+            if (!aRef.getParameter().equals(p)) {
+              error(x,
+                  "GWT.create arguments must have the same order than code-gen method arguments");
+              return null;
+            }
+          } else {
+            if (support != null) {
+              error(x,
+                  "All GWT.create constructor arguments must be code-gen method constructor arguments");
+              return null;
+            }
+          }
+        } else if (support != null) {
+          error(x,
+              "All GWT.create constructor arguments must be code-gen method constructor arguments");
+          return null;
+        }
+      }
+
+      if (support != null) {
+        // Call GwtCreateFactory.create()
+        JParameter factory = support.getFactoryParam();
+        assert factory != null;
+        JParameterRef factoryRef = new JParameterRef(x.getSourceInfo(), factory);
+        JMethod create = program.getIndexedMethod("GwtCreateFactory.create");
+        JMethodCall createCall = new JMethodCall(x.getSourceInfo(), factoryRef, create);
+        return createCall;
+      }
+
+      return bindGwtCreate(x, currentMethod.getEnclosingType(), reqType, args, genArgs);
+    }
+    
     private JExpression handleImplNameOf(final JMethodCall x) {
       assert (x.getArgs().size() == 1);
       JExpression arg = x.getArgs().get(0);
@@ -564,9 +659,95 @@ public class UnifyAst {
       throw new InternalCompilerException("Unknown magic method");
     }
 
-    private JExpression newGwtCreateFactory(JMethodCall x, String typeName,
-        ArrayList<JExpression> ctorArgs) {
-      return null;
+    private JNewInstance newGwtCreateFactory(JNode x, String typeName, List<JExpression> args) {
+      SourceInfo info = x.getSourceInfo().makeChild();
+
+      JArgument[] jargs = ExpressionToArgumentTranslator.translate(args);
+      String key = JArguments.getKey(jargs);
+      String factoryName = typeName + "_factory" + key;
+      JConstructor factoryCtor = factoryCtors.get(factoryName);
+
+      if (factoryCtor == null) {
+        // Create a factory type
+        JInterfaceType factoryIntf = (JInterfaceType) program.getIndexedType("GwtCreateFactory");
+        JClassType factoryType = new JClassType(info, factoryName, false, true);
+        factoryType.setSuperClass(program.getTypeJavaLangObject());
+        factoryType.addImplements(factoryIntf);
+
+        JMethod clinit =
+            new JMethod(x.getSourceInfo(), "$clinit", factoryType, JPrimitiveType.VOID, false,
+                true, true, AccessModifier.PRIVATE);
+        clinit.setBody(new JMethodBody(info));
+        clinit.freezeParamTypes();
+        clinit.setSynthetic();
+        factoryType.addMethod(clinit);
+
+        factoryCtor = new JConstructor(info, factoryType);
+        List<JExpression> ctorArgs = new ArrayList<JExpression>();
+        JMethodBody ctorBody = new JMethodBody(info);
+        factoryCtor.setBody(ctorBody);
+        for (int i = 0; i < args.size(); i++) {
+          JExpression a = args.get(i);
+          if (jargs[i] instanceof JVariableArgument) {
+
+            String paramName = "_a" + i;
+            JType paramType = a.getType();
+            JParameter param =
+                JParameter.create(info, paramName, paramType, true, false, factoryCtor);
+
+            JParameterRef paramRef = new JParameterRef(info, param);
+            JField field =
+                new JField(info, paramName, factoryType, paramType, false, Disposition.FINAL);
+            factoryType.addField(field);
+
+            JFieldRef caCtor =
+                new JFieldRef(info, new JThisRef(info, factoryType), field, factoryType);
+            JFieldRef ca = new JFieldRef(info, new JThisRef(info, factoryType), field, factoryType);
+            ctorArgs.add(ca);
+            JExpressionStatement asg =
+                JProgram.createAssignmentStmt(x.getSourceInfo(), caCtor, paramRef);
+            ctorBody.getBlock().addStmt(asg);
+          } else {
+            ctorArgs.add(a);
+          }
+        }
+        factoryCtor.freezeParamTypes();
+        factoryType.addMethod(factoryCtor);
+
+        // Make GwtCreateFactory.create()
+        JMethod createMethod =
+            new JMethod(info, "create", factoryType, program.getTypeJavaLangObject(), false, false,
+                true, AccessModifier.PUBLIC);
+
+        JMethodBody createBody = new JMethodBody(info);
+        createMethod.setBody(createBody);
+        JExpression gwtCreateCall = bindGwtCreate(x, factoryType, typeName, ctorArgs, jargs);
+        if (gwtCreateCall == null) {
+          return null;
+        }
+        createBody.getBlock().addStmt(new JReturnStatement(info, gwtCreateCall));
+
+        createMethod.freezeParamTypes();
+        factoryType.addMethod(createMethod);
+
+        // add this new class
+        program.addType(factoryType);
+        instantiate(factoryType);
+
+        factoryCtors.put(factoryName, factoryCtor);
+      }
+
+      ArrayList<JExpression> factoryArgs = new ArrayList<JExpression>();
+      for (int i = 0; i < jargs.length; i++) {
+        if (jargs[i] instanceof JVariableArgument) {
+          factoryArgs.add(args.get(i));
+        }
+      }
+
+      JNewInstance newFactory =
+          new JNewInstance(info, factoryCtor, currentMethod.getEnclosingType());
+      newFactory.addArgs(factoryArgs);
+      return newFactory;
     }
   }
 
@@ -578,6 +759,9 @@ public class UnifyAst {
 
   public static final String GWT_CREATE =
       "com.google.gwt.core.shared.GWT.create(Ljava/lang/Class;)Ljava/lang/Object;";
+  
+  private static final String GWT_CREATE_WITH_ARGS =
+      "com.google.gwt.core.shared.GWT.create(Ljava/lang/Class;[Ljava/lang/Object;)Ljava/lang/Object;";
 
   private static final String GWT_DEBUGGER_SHARED = "com.google.gwt.core.shared.GWT.debugger()V";
 
@@ -595,7 +779,10 @@ public class UnifyAst {
 
   public static final String OLD_GWT_CREATE =
       "com.google.gwt.core.client.GWT.create(Ljava/lang/Class;)Ljava/lang/Object;";
-
+  
+  private static final String OLD_GWT_CREATE_WITH_ARGS =
+      "com.google.gwt.core.client.GWT.create(Ljava/lang/Class;[Ljava/lang/Object;)Ljava/lang/Object;";
+  
   private static final String OLD_GWT_IS_CLIENT = "com.google.gwt.core.client.GWT.isClient()Z";
 
   private static final String OLD_GWT_IS_PROD_MODE = "com.google.gwt.core.client.GWT.isProdMode()Z";
@@ -606,7 +793,8 @@ public class UnifyAst {
    * Methods for which the call site must be replaced with magic AST nodes.
    */
   private static final Set<String> MAGIC_METHOD_CALLS = new LinkedHashSet<String>(Arrays.asList(
-      GWT_CREATE, GWT_DEBUGGER_SHARED, GWT_DEBUGGER_CLIENT, OLD_GWT_CREATE, IMPL_GET_NAME_OF));
+      GWT_CREATE, GWT_CREATE_WITH_ARGS, GWT_DEBUGGER_SHARED, GWT_DEBUGGER_CLIENT, OLD_GWT_CREATE,
+      OLD_GWT_CREATE_WITH_ARGS, IMPL_GET_NAME_OF));
 
   /**
    * Methods with magic implementations that the compiler must insert.
@@ -638,6 +826,7 @@ public class UnifyAst {
   private final TreeLogger logger;
   private final Set<JMethod> magicMethodCalls = new IdentityHashSet<JMethod>();
   private final Set<JMethod> gwtDebuggerMethods = new IdentityHashSet<JMethod>();
+  private final Map<String, JConstructor> factoryCtors = new HashMap<String, JConstructor>();
   private final Map<String, JMethod> methodMap = new HashMap<String, JMethod>();
   private final JJSOptions options;
   private final JProgram program;

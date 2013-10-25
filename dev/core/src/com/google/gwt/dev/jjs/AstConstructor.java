@@ -17,6 +17,7 @@ package com.google.gwt.dev.jjs;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.dev.cfg.Properties;
 import com.google.gwt.dev.javac.CompilationState;
 import com.google.gwt.dev.javac.StandardGeneratorContext;
@@ -54,6 +55,12 @@ public class AstConstructor {
       @Override
       public String[] getAllPossibleRebindAnswers(TreeLogger logger, String sourceTypeName)
           throws UnableToCompleteException {
+        return getAllPossibleRebindAnswers(logger, sourceTypeName, new JArgument[0]);
+      }
+      
+      @Override
+      public String[] getAllPossibleRebindAnswers(TreeLogger logger, String sourceTypeName,
+          JArgument[] args) throws UnableToCompleteException {
         return new String[0];
       }
 
