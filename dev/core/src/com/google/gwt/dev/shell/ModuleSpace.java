@@ -17,6 +17,8 @@ package com.google.gwt.dev.shell;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
+import com.google.gwt.dev.jdt.RebindOracle.TypeNames;
 import com.google.gwt.dev.util.Name;
 import com.google.gwt.dev.util.Name.BinaryName;
 import com.google.gwt.dev.util.Util;
@@ -456,7 +458,6 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
    * @deprecated use {@link ModuleSpace#rebindAndCreate(String, Object[])}.
    */
   @Deprecated
-  @SuppressWarnings("unchecked")
   public <T> T rebindAndCreate(String requestedClassName)
       throws UnableToCompleteException {
     return rebindAndCreate(requestedClassName, new Object[0]);
@@ -477,7 +478,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
       // Rebind operates on source-level names.
       //
       String sourceName = BinaryName.toSourceName(requestedClassName);
-      resultName = rebind(sourceName);
+      resultName = rebind(sourceName, args);
       moduleSpaceRebindAndCreate.addData(
           "Requested Class", requestedClassName, "Result Name", resultName);
       resolvedClass = loadClassFromSourceName(resultName);
@@ -485,6 +486,21 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
         msg = "Deferred binding result type '" + resultName
             + "' should not be abstract";
       } else {
+        if (args.length > 0) {
+          for (Constructor<?> c : resolvedClass.getDeclaredConstructors()) {
+            if (c.getParameterTypes().length == args.length) {
+              try {
+                c.setAccessible(true);
+                return (T) c.newInstance(args);
+              } catch (InstantiationException e) {
+              } catch (IllegalAccessException e) {
+              } catch (IllegalArgumentException e) {
+              } catch (InvocationTargetException e) {
+              }
+            }
+          }
+          throw new NoSuchMethodException("constructor not found for the argument list");
+        }
         Constructor<?> ctor = resolvedClass.getDeclaredConstructor();
         ctor.setAccessible(true);
         return (T) ctor.newInstance();
@@ -605,11 +621,20 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return exception == null;
   }
 
+  /**
+   * @deprecated use {@link ModuleSpace#rebind(String, Object[])}.
+   */
+  @Deprecated
   protected String rebind(String sourceName) throws UnableToCompleteException {
+    return rebind(sourceName, new Object[0]);
+  }
+  
+  protected String rebind(String sourceName, Object[] args) throws UnableToCompleteException {
     try {
-      String result = host.rebind(logger, sourceName);
-      if (result != null) {
-        return result;
+      JArgument[] rebindArgs = RuntimeArgumentTranslator.translate(args);
+      TypeNames result = host.rebind(logger, sourceName, rebindArgs);
+      if (result.getSubstituteTypeName() != null) {
+        return result.getSubstituteTypeName();
       } else {
         return sourceName;
       }

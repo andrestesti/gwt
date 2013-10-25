@@ -86,10 +86,12 @@ public class JProgram extends JNode {
       "java.lang.Byte", "java.lang.Character", "java.lang.Short", "java.lang.Integer",
       "java.lang.Long", "java.lang.Float", "java.lang.Double", "java.lang.Throwable",
       "com.google.gwt.core.client.GWT", JProgram.JAVASCRIPTOBJECT,
-      "com.google.gwt.lang.ClassLiteralHolder", "com.google.gwt.core.client.RunAsyncCallback",
+      "com.google.gwt.lang.GwtCreateFactory", "com.google.gwt.lang.ClassLiteralHolder",
+      "com.google.gwt.core.client.RunAsyncCallback",
       "com.google.gwt.core.client.impl.AsyncFragmentLoader",
       "com.google.gwt.core.client.impl.Impl", "com.google.gwt.lang.EntryMethodHolder",
-      "com.google.gwt.core.client.prefetch.RunAsyncCode", "com.google.gwt.lang.ArrayPrototypePatcher"));
+      "com.google.gwt.core.client.prefetch.RunAsyncCode",
+      "com.google.gwt.lang.ArrayPrototypePatcher"));
 
   public static final String JAVASCRIPTOBJECT = "com.google.gwt.core.client.JavaScriptObject";
 

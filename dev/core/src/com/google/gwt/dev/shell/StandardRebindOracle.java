@@ -22,6 +22,7 @@ import com.google.gwt.core.ext.RebindResult;
 import com.google.gwt.core.ext.RebindRuleResolver;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.linker.ArtifactSet;
 import com.google.gwt.dev.RebindCache;
 import com.google.gwt.dev.cfg.Rule;
@@ -57,9 +58,9 @@ public class StandardRebindOracle implements RebindOracle {
       }
       return false;
     }
-
-    public String rebind(TreeLogger logger, String typeName, ArtifactAcceptor artifactAcceptor)
-        throws UnableToCompleteException {
+    
+    public String rebind(TreeLogger logger, String typeName, String requestTypeName,
+        JArgument[] args, ArtifactAcceptor artifactAcceptor) throws UnableToCompleteException {
       Event rebindEvent = SpeedTracerLogger.start(DevModeEventType.REBIND, "Type Name", typeName);
       try {
         genCtx.setPropertyOracle(propOracle);
@@ -70,17 +71,19 @@ public class StandardRebindOracle implements RebindOracle {
           return typeName;
         }
 
-        CachedGeneratorResult cachedResult = rebindCacheGet(rule, typeName);
+        GwtCreateRequestGenerator.generate(logger, genCtx, typeName, requestTypeName, args);
+
+        CachedGeneratorResult cachedResult = rebindCacheGet(rule, requestTypeName);
         if (cachedResult != null) {
           genCtx.setCachedGeneratorResult(cachedResult);
         }
 
         // realize the rule (call a generator, or do type replacement, etc.)
-        RebindResult result = rule.realize(logger, genCtx, typeName);
+        RebindResult result = rule.realize(logger, genCtx, requestTypeName);
 
         // handle rebind result caching (if enabled)
         String resultTypeName =
-            processCacheableResult(logger, rule, typeName, cachedResult, result);
+            processCacheableResult(logger, rule, requestTypeName, cachedResult, result);
 
         /*
          * Finalize new artifacts from the generator context
@@ -260,25 +263,35 @@ public class StandardRebindOracle implements RebindOracle {
     typeNameBindingMap.remove(sourceTypeName);
   }
 
+  /**
+   * @deprecated use {@link StandardRebindOracle#rebind(TreeLogger, String, JArgument[])}.
+   */
   @Override
   public String rebind(TreeLogger logger, String typeName) throws UnableToCompleteException {
-    return rebind(logger, typeName, null);
+    return rebind(logger, typeName, new JArgument[0]).getSubstituteTypeName();
+  }
+  
+  @Override
+  public TypeNames rebind(TreeLogger logger, String typeName, JArgument[] args)
+      throws UnableToCompleteException {
+    return rebind(logger, typeName, args, null);
   }
 
-  public String rebind(TreeLogger logger, String typeName, ArtifactAcceptor artifactAcceptor)
-      throws UnableToCompleteException {
+  public TypeNames rebind(TreeLogger logger, String typeName, JArgument[] args,
+      ArtifactAcceptor artifactAcceptor) throws UnableToCompleteException {
 
-    String resultTypeName = typeNameBindingMap.get(typeName);
+    String requestTypeName = GwtCreateRequestGenerator.getRequestTypeName(typeName, args);
+    String resultTypeName = typeNameBindingMap.get(requestTypeName);
     if (resultTypeName == null) {
-      logger = Messages.TRACE_TOPLEVEL_REBIND.branch(logger, typeName, null);
+      logger = Messages.TRACE_TOPLEVEL_REBIND.branch(logger, requestTypeName, null);
 
       Rebinder rebinder = new Rebinder();
-      resultTypeName = rebinder.rebind(logger, typeName, artifactAcceptor);
+      resultTypeName = rebinder.rebind(logger, typeName, requestTypeName, args, artifactAcceptor);
       typeNameBindingMap.put(typeName, resultTypeName);
 
       Messages.TRACE_TOPLEVEL_REBIND_RESULT.log(logger, resultTypeName, null);
     }
-    return resultTypeName;
+    return new TypeNames(requestTypeName, resultTypeName);
   }
 
   public void setRebindCache(RebindCache cache) {

@@ -17,13 +17,39 @@ package com.google.gwt.dev.jdt;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
 
 /**
  * Abstracts the implementation of making deferred binding decisions.
  */
 public interface RebindOracle {
+  
+  /**
+   * Holds a pair of type names.
+   */
+  public static class TypeNames {
+
+    private final String requestTypeName;
+
+    private final String substituteTypeName;
+
+    public TypeNames(String requestTypeName, String substituteTypeName) {
+      this.requestTypeName = requestTypeName;
+      this.substituteTypeName = substituteTypeName;
+    }
+
+    public String getRequestTypeName() {
+      return requestTypeName;
+    }
+
+    public String getSubstituteTypeName() {
+      return substituteTypeName;
+    }
+  }
 
   /**
+   * @deprecated use {@link RebindOracle#rebind(TreeLogger, String, JArgument[])}.
+   * 
    * Determines which type should be substituted for the requested type. The
    * caller must ensure that the result type is instantiable.
    * 
@@ -31,5 +57,19 @@ public interface RebindOracle {
    *         this method must not return <code>null</code> if sourceTypeName is
    *         not <code>null</code>
    */
+  @Deprecated
   String rebind(TreeLogger logger, String sourceTypeName) throws UnableToCompleteException;
+  
+  /**
+   * Determines which type should be substituted for the requested type. The
+   * caller must ensure that the result type is instantiable.
+   * 
+   * @return the pair of the requested type name that may be the requested  with 
+   *         arguments, and the substitute type name
+   *         which may be the requested type itself;
+   *         this method must not return <code>null</code> if sourceTypeName is
+   *         not <code>null</code>
+   */
+  TypeNames rebind(TreeLogger logger, String sourceTypeName, JArgument[] args)
+      throws UnableToCompleteException;
 }

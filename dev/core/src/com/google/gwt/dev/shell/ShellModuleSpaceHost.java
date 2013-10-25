@@ -17,6 +17,7 @@ package com.google.gwt.dev.shell;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.linker.ArtifactSet;
 import com.google.gwt.dev.RebindCache;
 import com.google.gwt.dev.cfg.ModuleDef;
@@ -133,14 +134,23 @@ public class ShellModuleSpaceHost implements ModuleSpaceHost {
       moduleSpaceHostReadyEvent.end();
     }
   }
-
+  
+  /**
+   * @deprecated use {@link ShellModuleSpaceHost#rebind(TreeLogger, String, JArgument[])}.
+   */
+  @Deprecated
   public String rebind(TreeLogger logger, String sourceTypeName)
+      throws UnableToCompleteException {
+    return rebind(logger, sourceTypeName, new JArgument[0]).getSubstituteTypeName();
+  }
+
+  public TypeNames rebind(TreeLogger logger, String sourceTypeName, JArgument[] args)
       throws UnableToCompleteException {
     synchronized (rebindLock) {
       checkForModuleSpace();
-      return rebindOracle.rebind(logger, sourceTypeName, new ArtifactAcceptor() {
+      return rebindOracle.rebind(logger, sourceTypeName, args, new ArtifactAcceptor() {
         public void accept(TreeLogger logger, ArtifactSet newlyGeneratedArtifacts)
-        throws UnableToCompleteException {
+            throws UnableToCompleteException {
           artifactAcceptor.accept(logger, newlyGeneratedArtifacts);
         }
       });
