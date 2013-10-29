@@ -462,7 +462,7 @@ public class UnifyAst {
       }
       for (int i : support.getCtorParamIndices()) {
         if (!x.getParams().get(i).isFinal()) {
-          error(x, "code-gen constructor parameters must be final");
+          error(x, "Rebind constructor parameters must be final");
           return false;
         }
       }
@@ -494,12 +494,12 @@ public class UnifyAst {
       if (support.hasTypeParam()) {
         JExpression typeParam = args.get(support.getTypeParamIndex());
         if (!(typeParam instanceof JClassLiteral)) {
-          error(x, "Only class literals may be used as type arguments to codegen methods");
+          error(x, "Only class literals may be used as type arguments to rebind methods");
           return false;
         }
         JClassLiteral classLiteral = (JClassLiteral) typeParam;
         if (!(classLiteral.getRefType() instanceof JDeclaredType)) {
-          error(x, "Only classes and interfaces may be used as type arguments to codegen methods");
+          error(x, "Only classes and interfaces may be used as type arguments to rebind methods");
           return false;
         }
         typeName = JGwtCreate.nameOf(classLiteral.getRefType());
@@ -541,7 +541,7 @@ public class UnifyAst {
         JParameterRef paramRef = (JParameterRef) typeArg;
         support = paramRef.getParameter().getEnclosingMethod().getCodegenSupport();
         if (support == null) {
-          error(x, "Only code-gen type arguments may be used as first argument to GWT.create()");
+          error(x, "Only rebind type arguments may be used as first argument to GWT.create()");
           return null;
         }
         reqType = null;
@@ -570,12 +570,12 @@ public class UnifyAst {
             if (support == null) {
               if (i > 0) {
                 error(x,
-                    "All GWT.create constructor arguments must be code-gen method constructor arguments");
+                    "All GWT.create constructor arguments must be rebind method constructor arguments");
                 return null;
               }
               if (!reqType.equals(aSupport.getTypeName())) {
                 error(x,
-                    "All GWT.create type argument must be equals than code-gen method type argument");
+                    "All GWT.create type argument must be equals than rebind method type argument");
                 return null;
               }
               support = aSupport;
@@ -584,19 +584,19 @@ public class UnifyAst {
             JParameter p = support.getMethod().getParams().get(aIndex);
             if (!aRef.getParameter().equals(p)) {
               error(x,
-                  "GWT.create arguments must have the same order than code-gen method arguments");
+                  "GWT.create arguments must have the same order than rebind method arguments");
               return null;
             }
           } else {
             if (support != null) {
               error(x,
-                  "All GWT.create constructor arguments must be code-gen method constructor arguments");
+                  "All GWT.create constructor arguments must be rebind method constructor arguments");
               return null;
             }
           }
         } else if (support != null) {
           error(x,
-              "All GWT.create constructor arguments must be code-gen method constructor arguments");
+              "All GWT.create constructor arguments must be rebind method constructor arguments");
           return null;
         }
       }
@@ -1065,7 +1065,7 @@ public class UnifyAst {
           for (JMethod upref : collected.get(method.getSignature())) {
             if (canAccessSuperMethod(type, upref)) {
               if (!method.hasIsomorphicCodegenSignature(upref)) {
-                error(method, "Overriding method must complain the codegen signature");
+                error(method, "Overriding method must complain the rebind method signature");
                 return;
               }
               method.addOverride(upref);
