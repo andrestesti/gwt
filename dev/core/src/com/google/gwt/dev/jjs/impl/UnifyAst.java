@@ -20,6 +20,7 @@ import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.arguments.JArguments;
 import com.google.gwt.core.ext.arguments.JVariableArgument;
+import com.google.gwt.dev.CompilerContext;
 import com.google.gwt.dev.javac.CompilationProblemReporter;
 import com.google.gwt.dev.javac.CompilationUnit;
 import com.google.gwt.dev.javac.CompiledClass;
@@ -824,6 +825,7 @@ public class UnifyAst {
   private final Set<JNode> liveFieldsAndMethods = new IdentityHashSet<JNode>();
 
   private final TreeLogger logger;
+  private final CompilerContext compilerContext;
   private final Set<JMethod> magicMethodCalls = new IdentityHashSet<JMethod>();
   private final Set<JMethod> gwtDebuggerMethods = new IdentityHashSet<JMethod>();
   private final Map<String, JConstructor> factoryCtors = new HashMap<String, JConstructor>();
@@ -842,12 +844,13 @@ public class UnifyAst {
   private final Map<String, List<JMethod>> virtualMethodsPending =
       new java.util.HashMap<String, List<JMethod>>();
 
-  public UnifyAst(TreeLogger logger, JProgram program, JsProgram jsProgram, JJSOptions options,
-      RebindPermutationOracle rpo) {
+  public UnifyAst(TreeLogger logger, CompilerContext compilerContext, JProgram program,
+      JsProgram jsProgram, RebindPermutationOracle rpo) {
     this.logger = logger;
+    this.compilerContext = compilerContext;
     this.program = program;
     this.jsProgram = jsProgram;
-    this.options = options;
+    this.options = compilerContext.getOptions();
     this.rpo = rpo;
     this.classFileMap = rpo.getCompilationState().getClassFileMap();
     this.classFileMapBySource = rpo.getCompilationState().getClassFileMapBySource();
