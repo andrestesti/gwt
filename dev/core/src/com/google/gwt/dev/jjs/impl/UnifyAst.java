@@ -367,7 +367,7 @@ public class UnifyAst {
     @Override
     public boolean visit(JMethod x, Context ctx) {
       currentMethod = x;
-      return true;
+      return ensureCodegenMethod(x);
     }
 
     @Override
@@ -479,9 +479,6 @@ public class UnifyAst {
     }
 
     private boolean ensureCodegenMethodCall(JMethodCall x) {
-      if (!ensureCodegenMethod(x.getTarget())) {
-        return false;
-      }
       CodegenSupport support = x.getTarget().getCodegenSupport();
       if (support == null) {
         return true;
@@ -652,7 +649,8 @@ public class UnifyAst {
     private JExpression handleMagicMethodCall(JMethodCall x) {
       JMethod target = x.getTarget();
       String sig = target.getEnclosingType().getName() + '.' + target.getSignature();
-      if (GWT_CREATE.equals(sig) || OLD_GWT_CREATE.equals(sig)) {
+      if (GWT_CREATE.equals(sig) || GWT_CREATE_WITH_ARGS.equals(sig) || OLD_GWT_CREATE.equals(sig)
+          || OLD_GWT_CREATE_WITH_ARGS.equals(sig)) {
         return handleGwtCreate(x);
       } else if (IMPL_GET_NAME_OF.equals(sig)) {
         return handleImplNameOf(x);
