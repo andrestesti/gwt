@@ -18,8 +18,6 @@ package com.google.gwt.dev.jjs.impl;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.dev.javac.testing.impl.MockJavaResource;
-import com.google.gwt.dev.jjs.ast.JProgram;
-import com.google.gwt.dev.jjs.impl.codesplitter.ReplaceRunAsyncs;
 import com.google.gwt.dev.util.UnitTestTreeLogger;
 
 /**
@@ -53,9 +51,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
     }
 
     try {
-      JProgram program =
-          compileSnippet("void", "new TypeParamAlreadyDefined().foo(String.class);");
-      ReplaceRunAsyncs.exec(logger, program);
+      compileSnippet("void", "new TypeParamAlreadyDefined().foo(String.class);");
       fail("Expected compilation to fail");
     } catch (UnableToCompleteException e) {
       // expected
@@ -90,9 +86,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
     }
 
     try {
-      JProgram program =
-          compileSnippet("void", "new TooMuchTypeParams().foo(String.class, String.class);");
-      ReplaceRunAsyncs.exec(logger, program);
+      compileSnippet("void", "new TooMuchTypeParams().foo(String.class, String.class);");
       fail("Expected compilation to fail");
     } catch (UnableToCompleteException e) {
       // expected
@@ -140,8 +134,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
     }
 
     try {
-      JProgram program = compileSnippet("void", "new BadCtorParamOverrideImpl();");
-      ReplaceRunAsyncs.exec(logger, program);
+      compileSnippet("void", "new BadCtorParamOverrideImpl();");
       fail("Expected compilation to fail");
     } catch (UnableToCompleteException e) {
       // expected
@@ -189,8 +182,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
     }
 
     try {
-      JProgram program = compileSnippet("void", "new BadTypeParamOverrideImpl();");
-      ReplaceRunAsyncs.exec(logger, program);
+      compileSnippet("void", "new BadTypeParamOverrideImpl();");
       fail("Expected compilation to fail");
     } catch (UnableToCompleteException e) {
       // expected
@@ -238,8 +230,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
     }
 
     try {
-      JProgram program = compileSnippet("void", "new BadTypeOverrideImpl();");
-      ReplaceRunAsyncs.exec(logger, program);
+      compileSnippet("void", "new BadTypeOverrideImpl();");
       fail("Expected compilation to fail");
     } catch (UnableToCompleteException e) {
       // expected

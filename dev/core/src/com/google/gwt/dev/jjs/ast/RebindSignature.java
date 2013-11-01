@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Codegen atributes for methods.
  */
-public class CodegenSupport implements Serializable {
+public class RebindSignature implements Serializable {
 
   private JMethod method;
   private String typeName;
@@ -30,7 +30,7 @@ public class CodegenSupport implements Serializable {
   
   private JParameter factoryParam = null;
 
-  public CodegenSupport(JMethod method, String typeName, int typeParamIndex,
+  public RebindSignature(JMethod method, String typeName, int typeParamIndex,
       List<Integer> ctorParamIndices) {
     this.method = method;
     this.typeName = typeName;

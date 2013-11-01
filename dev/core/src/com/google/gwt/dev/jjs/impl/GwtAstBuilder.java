@@ -22,7 +22,7 @@ import com.google.gwt.dev.jjs.InternalCompilerException;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
 import com.google.gwt.dev.jjs.ast.AccessModifier;
-import com.google.gwt.dev.jjs.ast.CodegenSupport;
+import com.google.gwt.dev.jjs.ast.RebindSignature;
 import com.google.gwt.dev.jjs.ast.JAbsentArrayDimension;
 import com.google.gwt.dev.jjs.ast.JArrayLength;
 import com.google.gwt.dev.jjs.ast.JArrayRef;
@@ -3206,10 +3206,10 @@ public class GwtAstBuilder {
   }
   
   /**
-   * Add codegen support to a method if annotations are present. 
+   * Add rebind signature to a method if annotations are present. 
    * Validations are performed in {@link UnifyAst}.
    */
-  private void addCodegenSupport(JMethod method, AbstractMethodDeclaration x) {
+  private void addRebindSignature(JMethod method, AbstractMethodDeclaration x) {
     if (x.annotations == null) {
       return;
     }
@@ -3258,9 +3258,9 @@ public class GwtAstBuilder {
           }
         }
       }
-      CodegenSupport support =
-          new CodegenSupport(method, typeName, typeParamIndex, ctorParamIndices);
-      method.setCodegenSupport(support);
+      RebindSignature signature =
+          new RebindSignature(method, typeName, typeParamIndex, ctorParamIndices);
+      method.setRebindSignature(signature);
     }
   }
 
@@ -3380,7 +3380,7 @@ public class GwtAstBuilder {
     // User args.
     createParameters(method, x);
     
-    addCodegenSupport(method, x);
+    addRebindSignature(method, x);
 
     if (x.isConstructor()) {
       if (isNested) {

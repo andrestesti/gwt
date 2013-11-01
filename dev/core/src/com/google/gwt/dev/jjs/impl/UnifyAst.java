@@ -31,7 +31,7 @@ import com.google.gwt.dev.jjs.JJSOptions;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
 import com.google.gwt.dev.jjs.ast.AccessModifier;
-import com.google.gwt.dev.jjs.ast.CodegenSupport;
+import com.google.gwt.dev.jjs.ast.RebindSignature;
 import com.google.gwt.dev.jjs.ast.Context;
 import com.google.gwt.dev.jjs.ast.HasName;
 import com.google.gwt.dev.jjs.ast.JArrayType;
@@ -424,31 +424,31 @@ public class UnifyAst {
 
     private boolean ensureCodegenMethod(JMethod x) {
 
-      CodegenSupport support = x.getCodegenSupport();
-      if (support == null) {
+      RebindSignature signature = x.getRebindSignature();
+      if (signature == null) {
         return true;
       }
 
       // Validate type params consistency
-      if (support.hasMultipleTypeParam()) {
+      if (signature.hasMultipleTypeParam()) {
         error(x, "Too much type parameters");
         return false;
       }
-      if (support.getTypeName() != null) {
-        if (support.hasTypeParam()) {
+      if (signature.getTypeName() != null) {
+        if (signature.hasTypeParam()) {
           error(x, "Type parameter already defined in @GwtCreate annotation");
           return false;
         }
-      } else if (!support.hasTypeParam()) {
+      } else if (!signature.hasTypeParam()) {
         error(x, "Type parameter is required");
         return false;
       }
-      if (support.getCtorParamIndices().contains(support.getTypeParamIndex())) {
+      if (signature.getCtorParamIndices().contains(signature.getTypeParamIndex())) {
         error(x, "Type parameter can't be already a constructor parameter");
         return false;
       }
-      if (support.hasTypeParam()) {
-        JParameter typeParam = support.getTypeParam();
+      if (signature.hasTypeParam()) {
+        JParameter typeParam = signature.getTypeParam();
         if (!"java.lang.Class".equals(typeParam.getType().getName())) {
           error(x, "Type parameter must be of type java.lang.Class");
           return false;
@@ -457,40 +457,40 @@ public class UnifyAst {
           error(x, "Type parameter must be final");
           return false;
         }
-      } else if (support.getCtorParamIndices().isEmpty()) {
-        error(x, "Method must have a type parameter if constructor parameters aren't present");
+      } else if (signature.getCtorParamIndices().isEmpty()) {
+        error(x, "Rebind method must have a type parameter if constructor parameters aren't present");
         return false;
       }
-      for (int i : support.getCtorParamIndices()) {
+      for (int i : signature.getCtorParamIndices()) {
         if (!x.getParams().get(i).isFinal()) {
           error(x, "Rebind constructor parameters must be final");
           return false;
         }
       }
-      // Adapt method for code-gen
+      // Adapt method for rebind
       JDeclaredType factoryIntf = program.getIndexedType("GwtCreateFactory");
       assert factoryIntf != null;
       JParameter factoryParam =
           new JParameter(x.getSourceInfo(), "$factory", factoryIntf, true, false, x);
       x.addParam(factoryParam);
-      support.setFactoryParam(factoryParam);
+      signature.setFactoryParam(factoryParam);
 
       return true;
     }
 
     private boolean ensureCodegenMethodCall(JMethodCall x) {
-      CodegenSupport support = x.getTarget().getCodegenSupport();
-      if (support == null) {
+      RebindSignature signature = x.getTarget().getRebindSignature();
+      if (signature == null) {
         return true;
       }
       ArrayList<JExpression> ctorArgs = new ArrayList<JExpression>();
       List<JExpression> args = x.getArgs();
-      for (Integer i : support.getCtorParamIndices()) {
+      for (Integer i : signature.getCtorParamIndices()) {
         ctorArgs.add(args.get(i));
       }
       String typeName;
-      if (support.hasTypeParam()) {
-        JExpression typeParam = args.get(support.getTypeParamIndex());
+      if (signature.hasTypeParam()) {
+        JExpression typeParam = args.get(signature.getTypeParamIndex());
         if (!(typeParam instanceof JClassLiteral)) {
           error(x, "Only class literals may be used as type arguments to rebind methods");
           return false;
@@ -502,7 +502,7 @@ public class UnifyAst {
         }
         typeName = JGwtCreate.nameOf(classLiteral.getRefType());
       } else {
-        typeName = support.getTypeName();
+        typeName = signature.getTypeName();
       }
       JExpression factory = newGwtCreateFactory(x, typeName, ctorArgs);
       if (factory != null) {
@@ -533,12 +533,12 @@ public class UnifyAst {
       } else {
         genArgs = new JArgument[0];
       }
-      CodegenSupport support = null;
+      RebindSignature signature = null;
       String reqType;
       if (typeArg instanceof JParameterRef) {
         JParameterRef paramRef = (JParameterRef) typeArg;
-        support = paramRef.getParameter().getEnclosingMethod().getCodegenSupport();
-        if (support == null) {
+        signature = paramRef.getParameter().getEnclosingMethod().getRebindSignature();
+        if (signature == null) {
           error(x, "Only rebind type arguments may be used as first argument to GWT.create()");
           return null;
         }
@@ -563,45 +563,46 @@ public class UnifyAst {
         JExpression a = args.get(i);
         if (a instanceof JParameterRef) {
           JParameterRef aRef = (JParameterRef) a;
-          CodegenSupport aSupport = aRef.getParameter().getEnclosingMethod().getCodegenSupport();
-          if (aSupport != null) {
-            if (support == null) {
+          RebindSignature aSignature =
+              aRef.getParameter().getEnclosingMethod().getRebindSignature();
+          if (aSignature != null) {
+            if (signature == null) {
               if (i > 0) {
                 error(x,
                     "All GWT.create constructor arguments must be rebind method constructor arguments");
                 return null;
               }
-              if (!reqType.equals(aSupport.getTypeName())) {
+              if (!reqType.equals(aSignature.getTypeName())) {
                 error(x,
                     "All GWT.create type argument must be equals than rebind method type argument");
                 return null;
               }
-              support = aSupport;
+              signature = aSignature;
             }
-            int aIndex = support.getCtorParamIndices().get(i);
-            JParameter p = support.getMethod().getParams().get(aIndex);
+            int aIndex = signature.getCtorParamIndices().get(i);
+            JParameter p = signature.getMethod().getParams().get(aIndex);
             if (!aRef.getParameter().equals(p)) {
               error(x,
                   "GWT.create arguments must have the same order than rebind method arguments");
               return null;
             }
           } else {
-            if (support != null) {
+            if (signature != null) {
               error(x,
                   "All GWT.create constructor arguments must be rebind method constructor arguments");
               return null;
             }
           }
-        } else if (support != null) {
+        } else if (signature != null) {
           error(x,
               "All GWT.create constructor arguments must be rebind method constructor arguments");
           return null;
         }
       }
 
-      if (support != null) {
+      if (signature != null) {
         // Call GwtCreateFactory.create()
-        JParameter factory = support.getFactoryParam();
+        JParameter factory = signature.getFactoryParam();
         assert factory != null;
         JParameterRef factoryRef = new JParameterRef(x.getSourceInfo(), factory);
         JMethod create = program.getIndexedMethod("GwtCreateFactory.create");
@@ -1065,7 +1066,7 @@ public class UnifyAst {
         if (method.canBePolymorphic()) {
           for (JMethod upref : collected.get(method.getSignature())) {
             if (canAccessSuperMethod(type, upref)) {
-              if (!method.hasIsomorphicCodegenSignature(upref)) {
+              if (!method.hasIsomorphicRebindSignature(upref)) {
                 error(method, "Overriding method must complain the rebind method signature");
                 return;
               }

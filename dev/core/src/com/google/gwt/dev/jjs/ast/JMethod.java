@@ -100,7 +100,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
    * Special serialization treatment.
    */
   private transient JAbstractMethodBody body = null;
-  private CodegenSupport codegenSupport = null;
+  private RebindSignature rebindSignature = null;
   private final JDeclaredType enclosingType;
   private boolean isAbstract;
   private boolean isFinal;
@@ -226,10 +226,6 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return body;
   }
   
-  public CodegenSupport getCodegenSupport() {
-    return codegenSupport;
-  }
-
   public JDeclaredType getEnclosingType() {
     return enclosingType;
   }
@@ -260,6 +256,10 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return params;
   }
 
+  public RebindSignature getRebindSignature() {
+    return rebindSignature;
+  }
+  
   public String getSignature() {
     if (signature == null) {
       StringBuilder sb = new StringBuilder();
@@ -288,40 +288,40 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
   }
   
   /**
-   * Determines if this method has an isomorphic codegen signature with another
+   * Determines if this method has an isomorphic rebind signature with another
    * method. This would check if an overriding method chain complains the 
-   * codegen signature.
+   * rebind signature.
    */
-  public boolean hasIsomorphicCodegenSignature(JMethod other) {
-    CodegenSupport otherCodegenSignature = other.getCodegenSupport();
-    if (codegenSupport == null) {
-      return otherCodegenSignature == null;
+  public boolean hasIsomorphicRebindSignature(JMethod other) {
+    RebindSignature otherRebindSignature = other.getRebindSignature();
+    if (rebindSignature == null) {
+      return otherRebindSignature == null;
     }
-    if (otherCodegenSignature == null) {
+    if (otherRebindSignature == null) {
       return false;
     }
-    if (codegenSupport.hasTypeParam()) {
-      if (!otherCodegenSignature.hasTypeParam()) {
+    if (rebindSignature.hasTypeParam()) {
+      if (!otherRebindSignature.hasTypeParam()) {
         return false;
       }
-      if (codegenSupport.getTypeParamIndex() != otherCodegenSignature.getTypeParamIndex()) {
+      if (rebindSignature.getTypeParamIndex() != otherRebindSignature.getTypeParamIndex()) {
         return false;
       }
     } else {
-      if (otherCodegenSignature.hasTypeParam()) {
+      if (otherRebindSignature.hasTypeParam()) {
         return false;
       }
-      if (!codegenSupport.getTypeName().equals(otherCodegenSignature.getTypeName())) {
+      if (!rebindSignature.getTypeName().equals(otherRebindSignature.getTypeName())) {
         return false;
       }
     }
-    List<Integer> methodIndices = codegenSupport.getCtorParamIndices();
-    List<Integer> uprefIndices = otherCodegenSignature.getCtorParamIndices();
-    if (methodIndices.size() != uprefIndices.size()) {
+    List<Integer> thisIndices = rebindSignature.getCtorParamIndices();
+    List<Integer> otherIndices = otherRebindSignature.getCtorParamIndices();
+    if (thisIndices.size() != otherIndices.size()) {
       return false;
     }
-    for (int i = 0; i < methodIndices.size(); i++) {
-      if (!methodIndices.get(i).equals(uprefIndices.get(i))) {
+    for (int i = 0; i < thisIndices.size(); i++) {
+      if (!thisIndices.get(i).equals(otherIndices.get(i))) {
         return false;
       }
     }
@@ -415,10 +415,6 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     }
   }
 
-  public void setCodegenSupport(CodegenSupport codegenSupport) {
-    this.codegenSupport = codegenSupport;
-  }
-  
   public void setFinal() {
     isFinal = true;
   }
@@ -449,6 +445,10 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     }
   }
 
+  public void setRebindSignature(RebindSignature rebindSignature) {
+    this.rebindSignature = rebindSignature;
+  }
+  
   public void setSynthetic() {
     isSynthetic = true;
   }
