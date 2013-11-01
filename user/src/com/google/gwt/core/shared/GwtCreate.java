@@ -20,7 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to define code-gen methods.
+ * Annotation to define rebind methods.
  */
 @Target({ElementType.METHOD})
 @Documented
@@ -41,14 +41,14 @@ public @interface GwtCreate {
   Class<?> type() default ByParameter.class;
 
   /**
-   * Annotation to define code-gen type parameters.
+   * Annotation to define rebind type parameters.
    */
   @Target({ElementType.PARAMETER})
   @interface Type {
   }
 
   /**
-   * Annotation to define code-gen constructor parameters.
+   * Annotation to define rebind constructor parameters.
    */
   @Target({ElementType.PARAMETER})
   @interface Param {
