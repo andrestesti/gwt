@@ -51,7 +51,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
     }
 
     try {
-      compileSnippet("void", "new TypeParamAlreadyDefined().foo(String.class);");
+      compileSnippet("void", "new TypeParamAlreadyDefined();");
       fail("Expected compilation to fail");
     } catch (UnableToCompleteException e) {
       // expected
@@ -86,7 +86,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
     }
 
     try {
-      compileSnippet("void", "new TooMuchTypeParams().foo(String.class, String.class);");
+      compileSnippet("void", "new TooMuchTypeParams();");
       fail("Expected compilation to fail");
     } catch (UnableToCompleteException e) {
       // expected

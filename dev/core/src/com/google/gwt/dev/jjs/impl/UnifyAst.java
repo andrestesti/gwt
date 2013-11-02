@@ -273,7 +273,7 @@ public class UnifyAst {
         // Should not have an overridden type at this point.
         assert x.getType() == target.getType();
       }
-      if (ensureCodegenMethodCall(x)) {
+      if (ensureRebindMethodCall(x)) {
         flowInto(target);
       }
     }
@@ -367,7 +367,7 @@ public class UnifyAst {
     @Override
     public boolean visit(JMethod x, Context ctx) {
       currentMethod = x;
-      return ensureCodegenMethod(x);
+      return ensureRebindMethod(x);
     }
 
     @Override
@@ -422,49 +422,63 @@ public class UnifyAst {
       }      
     }
 
-    private boolean ensureCodegenMethod(JMethod x) {
-
+    private boolean ensureRebindMethod(JMethod x) {
+      Boolean validity = rebindMethodsValidity.get(x);
+      if (validity != null) {
+        return validity;
+      }
       RebindSignature signature = x.getRebindSignature();
       if (signature == null) {
         return true;
       }
-
       // Validate type params consistency
       if (signature.hasMultipleTypeParam()) {
         error(x, "Too much type parameters");
+        rebindMethodsValidity.put(x, false);
         return false;
       }
       if (signature.getTypeName() != null) {
         if (signature.hasTypeParam()) {
           error(x, "Type parameter already defined in @GwtCreate annotation");
+          rebindMethodsValidity.put(x, false);
           return false;
         }
       } else if (!signature.hasTypeParam()) {
         error(x, "Type parameter is required");
+        rebindMethodsValidity.put(x, false);
         return false;
       }
       if (signature.getCtorParamIndices().contains(signature.getTypeParamIndex())) {
         error(x, "Type parameter can't be already a constructor parameter");
+        rebindMethodsValidity.put(x, false);
         return false;
       }
       if (signature.hasTypeParam()) {
         JParameter typeParam = signature.getTypeParam();
         if (!"java.lang.Class".equals(typeParam.getType().getName())) {
           error(x, "Type parameter must be of type java.lang.Class");
+          rebindMethodsValidity.put(x, false);
           return false;
         }
-        if (!typeParam.isFinal()) {
-          error(x, "Type parameter must be final");
+        if (!x.isAbstract() && !typeParam.isFinal()) {
+          error(x, "Type parameter must be final in non abstract methods");
+          rebindMethodsValidity.put(x, false);
           return false;
         }
       } else if (signature.getCtorParamIndices().isEmpty()) {
-        error(x, "Rebind method must have a type parameter if constructor parameters aren't present");
+        error(x,
+            "Rebind method must have a type parameter if constructor parameters aren't present");
+        rebindMethodsValidity.put(x, false);
         return false;
-      }
-      for (int i : signature.getCtorParamIndices()) {
-        if (!x.getParams().get(i).isFinal()) {
-          error(x, "Rebind constructor parameters must be final");
-          return false;
+      }      
+      // Validate final parameters if method is not abstract
+      if (!x.isAbstract()) {
+        for (int i : signature.getCtorParamIndices()) {
+          if (!x.getParams().get(i).isFinal()) {
+            error(x, "Rebind constructor parameters must be final");
+            rebindMethodsValidity.put(x, false);
+            return false;
+          }
         }
       }
       // Adapt method for rebind
@@ -474,11 +488,16 @@ public class UnifyAst {
           new JParameter(x.getSourceInfo(), "$factory", factoryIntf, true, false, x);
       x.addParam(factoryParam);
       signature.setFactoryParam(factoryParam);
+      
+      rebindMethodsValidity.put(x, true);
 
       return true;
     }
 
-    private boolean ensureCodegenMethodCall(JMethodCall x) {
+    private boolean ensureRebindMethodCall(JMethodCall x) {
+      if (!ensureRebindMethod(x.getTarget())) {
+        return false;
+      }
       RebindSignature signature = x.getTarget().getRebindSignature();
       if (signature == null) {
         return true;
@@ -827,6 +846,7 @@ public class UnifyAst {
   private final CompilerContext compilerContext;
   private final Set<JMethod> magicMethodCalls = new IdentityHashSet<JMethod>();
   private final Set<JMethod> gwtDebuggerMethods = new IdentityHashSet<JMethod>();
+  private final Map<JMethod, Boolean> rebindMethodsValidity = new HashMap<JMethod, Boolean>();
   private final Map<String, JConstructor> factoryCtors = new HashMap<String, JConstructor>();
   private final Map<String, JMethod> methodMap = new HashMap<String, JMethod>();
   private final JJSOptions options;
