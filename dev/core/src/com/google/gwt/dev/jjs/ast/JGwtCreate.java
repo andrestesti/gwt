@@ -44,23 +44,22 @@ public class JGwtCreate extends JExpression {
      */
     // TODO typecheck is required!
     int size = arguments.size();
-    JConstructor rightCtor = null;
-    for (JMethod ctor : classType.getMethods()) {
-      if (ctor instanceof JConstructor) {
-        if (ctor.getOriginalParamTypes().size() == size) {
-          if (rightCtor != null) {
+    JConstructor ctor = null;
+    for (JMethod method : classType.getMethods()) {
+      if (method instanceof JConstructor) {
+        if (method.getOriginalParamTypes().size() == size) {
+          if (ctor != null) {
             return null;
           }
-          rightCtor = (JConstructor) ctor;
-          break;
+          ctor = (JConstructor) method;
         }
       }
     }
-    if (rightCtor == null) {
+    if (ctor == null) {
       return null;
     }
     // Call it, using a new expression as a qualifier
-    JNewInstance instantiation = new JNewInstance(info, rightCtor, enclosingType);
+    JNewInstance instantiation = new JNewInstance(info, ctor, enclosingType);
     instantiation.addArgs(arguments);
     return instantiation;
   }

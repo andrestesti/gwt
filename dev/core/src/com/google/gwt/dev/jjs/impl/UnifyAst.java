@@ -410,7 +410,8 @@ public class UnifyAst {
             JGwtCreate.createInstantiationExpression(x.getSourceInfo(), (JClassType) answerType,
                 enclosingType, args);
         if (result == null) {
-          error(x, "Rebind result '" + answer + "' has no right constructors");
+          error(x, "Rebind result '" + answer
+              + "' has no suitable constructor for the requested argument list");
           return null;
         }
         instantiationExpressions.add(result);
