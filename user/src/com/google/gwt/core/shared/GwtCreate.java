@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 /**
  * Annotation to define rebind methods.
  */
-@Target({ElementType.METHOD})
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
 @Documented
 public @interface GwtCreate {
 

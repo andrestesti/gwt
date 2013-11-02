@@ -300,7 +300,9 @@ public class UnifyAst {
 
     @Override
     public void endVisit(JNewInstance x, Context ctx) {
-      flowInto(x.getTarget());
+      if (ensureRebindMethodCall(x)) {
+        flowInto(x.getTarget());
+      }
       assert !x.getEnclosingType().isExternal();
     }
 
