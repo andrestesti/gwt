@@ -276,8 +276,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the objects's space-separated style names
    */
   protected static String getStyleName(Element elem) {
-    return DOM.getElementProperty(
-        elem.<com.google.gwt.user.client.Element> cast(), "className");
+    return elem.getClassName();
   }
 
   /**
@@ -306,8 +305,7 @@ public abstract class UIObject implements HasVisibility {
    * @param styleName the new style name
    */
   protected static void setStyleName(Element elem, String styleName) {
-    DOM.setElementProperty(elem.<com.google.gwt.user.client.Element> cast(),
-        "className", styleName);
+    elem.setClassName(styleName);
   }
 
   /**
@@ -533,7 +531,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's absolute left position
    */
   public int getAbsoluteLeft() {
-    return DOM.getAbsoluteLeft(getElement());
+    return getElement().getAbsoluteLeft();
   }
 
   /**
@@ -543,7 +541,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's absolute top position
    */
   public int getAbsoluteTop() {
-    return DOM.getAbsoluteTop(getElement());
+    return getElement().getAbsoluteTop();
   }
 
   /**
@@ -552,14 +550,13 @@ public abstract class UIObject implements HasVisibility {
    * This method should not be overridden. It is non-final solely to support
    * legacy code that depends upon overriding it. If it is overridden, the
    * subclass implementation must not return a different element than was
-   * previously set using
-   * {@link #setElement(com.google.gwt.user.client.Element)}.
+   * previously set using {@link #setElement(Element)}.
    * 
    * @return the object's browser element
    */
   public com.google.gwt.user.client.Element getElement() {
     assert (element != null) : MISSING_ELEMENT_ERROR;
-    return (com.google.gwt.user.client.Element) element;
+    return DOM.asOld(element);
   }
 
   /**
@@ -569,7 +566,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset height
    */
   public int getOffsetHeight() {
-    return DOM.getElementPropertyInt(getElement(), "offsetHeight");
+    return getElement().getPropertyInt("offsetHeight");
   }
 
   /**
@@ -579,7 +576,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's offset width
    */
   public int getOffsetWidth() {
-    return DOM.getElementPropertyInt(getElement(), "offsetWidth");
+    return getElement().getPropertyInt("offsetWidth");
   }
 
   /**
@@ -613,7 +610,7 @@ public abstract class UIObject implements HasVisibility {
    * @return the object's title
    */
   public String getTitle() {
-    return DOM.getElementProperty(getElement(), "title");
+    return getElement().getPropertyString("title");
   }
 
   @Override
@@ -656,7 +653,7 @@ public abstract class UIObject implements HasVisibility {
     // This exists to deal with an inconsistency in IE's implementation where
     // it won't accept negative numbers in length measurements
     assert extractLengthValue(height.trim().toLowerCase()) >= 0 : "CSS heights should not be negative";
-    DOM.setStyleAttribute(getElement(), "height", height);
+    getElement().getStyle().setProperty("height", height);
   }
 
   /**
@@ -753,9 +750,9 @@ public abstract class UIObject implements HasVisibility {
    */
   public void setTitle(String title) {
     if (title == null || title.length() == 0) {
-      DOM.removeElementAttribute(getElement(), "title");
+      getElement().removeAttribute("title");
     } else {
-      DOM.setElementAttribute(getElement(), "title", title);
+      getElement().setAttribute("title", title);
     }
   }
 
@@ -774,7 +771,7 @@ public abstract class UIObject implements HasVisibility {
     // This exists to deal with an inconsistency in IE's implementation where
     // it won't accept negative numbers in length measurements
     assert extractLengthValue(width.trim().toLowerCase()) >= 0 : "CSS widths should not be negative";
-    DOM.setStyleAttribute(getElement(), "width", width);
+    getElement().getStyle().setProperty("width", width);
   }
 
   /**
@@ -814,7 +811,7 @@ public abstract class UIObject implements HasVisibility {
     if (element == null) {
       return "(null handle)";
     }
-    return DOM.toString(getElement());
+    return getElement().getString();
   }
 
   /**
@@ -902,7 +899,7 @@ public abstract class UIObject implements HasVisibility {
    * @param elem the object's element
    */
   protected final void setElement(Element elem) {
-    setElement((com.google.gwt.user.client.Element) elem);
+    setElement(DOM.asOld(elem));
   }
 
   /**
@@ -914,7 +911,9 @@ public abstract class UIObject implements HasVisibility {
    * 1.5, {@link #setElement(Element)} is the preferred method.
    * 
    * @param elem the object's element
+   * @deprecated Use and override {@link #setElement(Element)} instead.
    */
+  @Deprecated
   protected void setElement(com.google.gwt.user.client.Element elem) {
     assert (element == null || PotentialElement.isPotential(element)) : SETELEMENT_TWICE_ERROR;
     this.element = elem;

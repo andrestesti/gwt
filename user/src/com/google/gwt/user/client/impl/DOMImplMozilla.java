@@ -15,12 +15,21 @@
  */
 package com.google.gwt.user.client.impl;
 
-import com.google.gwt.user.client.Element;
+import com.google.gwt.dom.client.Element;
 
 /**
  * Mozilla implementation of StandardBrowser.
  */
 class DOMImplMozilla extends DOMImplStandard {
+
+  static {
+    addMozillaCaptureEventDispatchers();
+  }
+
+  private static native void addMozillaCaptureEventDispatchers() /*-{
+    @com.google.gwt.user.client.impl.DOMImplStandard::captureEventDispatchers['DOMMouseScroll'] =
+        @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*);
+  }-*/;
 
   @Override
   public void sinkEvents(Element elem, int bits) {
@@ -62,19 +71,5 @@ class DOMImplMozilla extends DOMImplStandard {
       }),
       true
     );
-
-    $wnd.addEventListener('DOMMouseScroll',
-      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent, true);
-  }-*/;
-
-  @Override
-  protected void disposeEventSystem() {
-    super.disposeEventSystem();
-    disposeEventSystemMozilla();
-  }
-
-  private native void disposeEventSystemMozilla() /*-{
-    $wnd.removeEventListener('DOMMouseScroll',
-      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent, true);
   }-*/;
 }

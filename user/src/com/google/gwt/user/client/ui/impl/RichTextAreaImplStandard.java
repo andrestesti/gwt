@@ -16,8 +16,8 @@
 package com.google.gwt.user.client.ui.impl;
 
 import com.google.gwt.core.client.JavaScriptException;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.RichTextArea;
 import com.google.gwt.user.client.ui.RichTextArea.FontSize;
 import com.google.gwt.user.client.ui.RichTextArea.Justification;
@@ -79,12 +79,12 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl implemen
 
   @Override
   public final String getHTML() {
-    return beforeInitPlaceholder == null ? getHTMLImpl() : DOM.getInnerHTML(beforeInitPlaceholder);
+    return beforeInitPlaceholder == null ? getHTMLImpl() : beforeInitPlaceholder.getInnerHTML();
   }
 
   @Override
   public final String getText() {
-    return beforeInitPlaceholder == null ? getTextImpl() : DOM.getInnerText(beforeInitPlaceholder);
+    return beforeInitPlaceholder == null ? getTextImpl() : beforeInitPlaceholder.getInnerText();
   }
 
   @Override
@@ -222,7 +222,7 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl implemen
     if (beforeInitPlaceholder == null) {
       setHTMLImpl(html);
     } else {
-      DOM.setInnerHTML(beforeInitPlaceholder, html);
+      beforeInitPlaceholder.setInnerHTML(html);
     }
   }
 
@@ -243,7 +243,7 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl implemen
     if (beforeInitPlaceholder == null) {
       setTextImpl(text);
     } else {
-      DOM.setInnerText(beforeInitPlaceholder, text);
+      beforeInitPlaceholder.setInnerText(text);
     }
   }
 
@@ -296,7 +296,7 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl implemen
     String html = getHTML();
     boolean enabled = isEnabled();
     beforeInitPlaceholder = DOM.createDiv();
-    DOM.setInnerHTML(beforeInitPlaceholder, html);
+    beforeInitPlaceholder.setInnerHTML(html);
     setEnabled(enabled);
   }
 
@@ -314,7 +314,7 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl implemen
     var wnd = elem.contentWindow;
 
     elem.__gwt_handler = $entry(function(evt) {
-      @com.google.gwt.user.client.DOM::dispatchEvent(Lcom/google/gwt/user/client/Event;Lcom/google/gwt/user/client/Element;)(evt, elem);
+      @com.google.gwt.user.client.DOM::dispatchEvent(Lcom/google/gwt/user/client/Event;Lcom/google/gwt/dom/client/Element;)(evt, elem);
     });
 
     elem.__gwt_focusHandler = function(evt) {
@@ -366,7 +366,7 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl implemen
 
     // When the iframe is ready, ensure cached content is set.
     if (beforeInitPlaceholder != null) {
-      setHTMLImpl(DOM.getInnerHTML(beforeInitPlaceholder));
+      setHTMLImpl(beforeInitPlaceholder.getInnerHTML());
       setEnabledImpl(isEnabled());
       beforeInitPlaceholder = null;
     }
