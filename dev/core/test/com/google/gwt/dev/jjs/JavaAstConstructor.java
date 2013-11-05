@@ -160,12 +160,12 @@ public class JavaAstConstructor {
       };
       
       public static final MockJavaResource GWTCREATE = new MockJavaResource(
-          "com.google.gwt.core.shared.GwtCreate") {
+          "com.google.gwt.core.shared.Rebind") {
         @Override
         public CharSequence getContent() {
           StringBuilder code = new StringBuilder();
           code.append("package com.google.gwt.core.shared;\n");
-          code.append("public @interface GwtCreate {\n");
+          code.append("public @interface Rebind {\n");
           code.append("  final class ByParameter {;\n");
           code.append("    private ByParameter() {};\n");
           code.append("  }\n");

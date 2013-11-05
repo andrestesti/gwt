@@ -3218,7 +3218,7 @@ public class GwtAstBuilder {
     for (Annotation a : x.annotations) {
       ReferenceBinding binding = (ReferenceBinding) a.resolvedType;
       String name = CharOperation.toString(binding.compoundName);
-      if (name.equals("com.google.gwt.core.shared.GwtCreate")) {
+      if (name.equals("com.google.gwt.core.shared.Rebind")) {
         isCodegenMethod = true;
         for (ElementValuePair p : a.computeElementValuePairs()) {
           String fieldName = CharOperation.charToString(p.getName());
@@ -3243,7 +3243,7 @@ public class GwtAstBuilder {
             for (Annotation a : arg.annotations) {
               ReferenceBinding binding = (ReferenceBinding) a.resolvedType;
               String name = CharOperation.toString(binding.compoundName);
-              if (name.equals("com.google.gwt.core.shared.GwtCreate$Type")) {
+              if (name.equals("com.google.gwt.core.shared.Rebind$Type")) {
                 if (typeParamIndex != -2) {
                   if (typeParamIndex > -1) {
                     typeParamIndex = -2;
@@ -3251,7 +3251,7 @@ public class GwtAstBuilder {
                     typeParamIndex = i;
                   }
                 }
-              } else if (name.equals("com.google.gwt.core.shared.GwtCreate$Param")) {
+              } else if (name.equals("com.google.gwt.core.shared.Rebind$Param")) {
                 ctorParamIndices.add(i);
               }
             }

@@ -442,7 +442,7 @@ public class UnifyAst {
       }
       if (signature.getTypeName() != null) {
         if (signature.hasTypeParam()) {
-          error(x, "Type parameter already defined in @GwtCreate annotation");
+          error(x, "Type parameter already defined in @Rebind annotation");
           rebindMethodsValidity.put(x, false);
           return false;
         }

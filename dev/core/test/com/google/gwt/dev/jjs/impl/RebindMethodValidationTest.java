@@ -31,11 +31,10 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate.Type;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
         code.append("public class TypeParamAlreadyDefined {\n");
-        code.append("  @GwtCreate(type = String.class)");
-        code.append("  public void foo(@Type final Class<?> t) {}\n");
+        code.append("  @Rebind(type = String.class)\n");
+        code.append("  public void foo(@Rebind.Type final Class<?> t) {}\n");
         code.append("}\n");
         return code;
       }
@@ -45,7 +44,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
       UnitTestTreeLogger.Builder builder = new UnitTestTreeLogger.Builder();
       builder.setLowestLogLevel(TreeLogger.ERROR);
       builder.expectError("Errors in 'test/TypeParamAlreadyDefined.java'", null);
-      builder.expectError("Line 5: Type parameter already defined in @GwtCreate annotation", null);
+      builder.expectError("Line 5: Type parameter already defined in @Rebind annotation", null);
       logger = builder.createLogger();
       this.logger = logger;
     }
@@ -66,10 +65,10 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate.Type;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
+        code.append("import com.google.gwt.core.shared.Rebind.Type;\n");
         code.append("public class TooMuchTypeParams {\n");
-        code.append("  @GwtCreate");
+        code.append("  @Rebind\n");
         code.append("  public void foo(@Type final Class<?> t0, @Type final Class<?> t1) {}\n");
         code.append("}\n");
         return code;
@@ -80,7 +79,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
       UnitTestTreeLogger.Builder builder = new UnitTestTreeLogger.Builder();
       builder.setLowestLogLevel(TreeLogger.ERROR);
       builder.expectError("Errors in 'test/TooMuchTypeParams.java'", null);
-      builder.expectError("Line 5: Too much type parameters", null);
+      builder.expectError("Line 6: Too much type parameters", null);
       logger = builder.createLogger();
       this.logger = logger;
     }
@@ -101,10 +100,11 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
+        code.append("import com.google.gwt.core.shared.Rebind.Param;\n");
         code.append("public interface BadCtorParamOverride {\n");
-        code.append("  @GwtCreate(type = String.class)");
-        code.append("  void foo(@GwtCreate.Param int p0, @GwtCreate.Param boolean p1);\n");
+        code.append("  @Rebind(type = String.class)");
+        code.append("  void foo(@Param int p0, @Param boolean p1);\n");
         code.append("}\n");
         return code;
       }
@@ -114,10 +114,10 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
         code.append("public class BadCtorParamOverrideImpl implements BadCtorParamOverride {\n");
-        code.append("  @GwtCreate(type = String.class)");
-        code.append("  public void foo(@GwtCreate.Param final int p0, boolean p1) {}\n");
+        code.append("  @Rebind(type = String.class)\n");
+        code.append("  public void foo(@Rebind.Param final int p0, boolean p1) {}\n");
         code.append("}\n");
         return code;
       }
@@ -128,7 +128,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
       builder.setLowestLogLevel(TreeLogger.ERROR);
       builder.expectError("Errors in 'test/BadCtorParamOverrideImpl.java'", null);
       builder.expectError(
-          "Line 4: Overriding method must complain the rebind method signature", null);
+          "Line 5: Overriding method must complain the rebind method signature", null);
       logger = builder.createLogger();
       this.logger = logger;
     }
@@ -149,10 +149,10 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
         code.append("public interface BadTypeParamOverride {\n");
-        code.append("  @GwtCreate");
-        code.append("  void foo(@GwtCreate.Type Class<?> type);\n");
+        code.append("  @Rebind\n");
+        code.append("  void foo(@Rebind.Type Class<?> type);\n");
         code.append("}\n");
         return code;
       }
@@ -162,10 +162,10 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
         code.append("public class BadTypeParamOverrideImpl implements BadTypeParamOverride {\n");
-        code.append("  @GwtCreate(type = Integer.class)");
-        code.append("  public void foo(@GwtCreate.Param final Class<?> type) {}\n");
+        code.append("  @Rebind(type = Integer.class)");
+        code.append("  public void foo(@Rebind.Param final Class<?> type) {}\n");
         code.append("}\n");
         return code;
       }
@@ -197,10 +197,10 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
         code.append("public interface BadTypeOverride {\n");
-        code.append("  @GwtCreate(type = String.class)");
-        code.append("  void foo(@GwtCreate.Param int p);\n");
+        code.append("  @Rebind(type = String.class)");
+        code.append("  void foo(@Rebind.Param int p);\n");
         code.append("}\n");
         return code;
       }
@@ -210,10 +210,10 @@ public class RebindMethodValidationTest extends JJSTestBase {
       public CharSequence getContent() {
         StringBuffer code = new StringBuffer();
         code.append("package test;\n");
-        code.append("import com.google.gwt.core.shared.GwtCreate;\n");
+        code.append("import com.google.gwt.core.shared.Rebind;\n");
         code.append("public class BadTypeOverrideImpl implements BadTypeOverride {\n");
-        code.append("  @GwtCreate(type = Integer.class)");
-        code.append("  public void foo(@GwtCreate.Param final int p) {}\n");
+        code.append("  @Rebind(type = Integer.class)");
+        code.append("  public void foo(@Rebind.Param final int p) {}\n");
         code.append("}\n");
         return code;
       }

@@ -21,7 +21,7 @@ import java.io.DataInput;
 import java.io.IOException;
 
 /**
- * Extracts an argument list.
+ * Extracts an argument list from a type.
  */
 public class ArgumentExtractor {
   

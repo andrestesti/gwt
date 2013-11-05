@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
 @Documented
-public @interface GwtCreate {
+public @interface Rebind {
 
   /**
    * Default class for type parameter.
