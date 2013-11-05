@@ -16,9 +16,9 @@
 package com.google.gwt.lang;
 
 /**
- * This is a magic interface the compiler uses to perform GWT.create() invocations.
+ * This is a magic interface the compiler uses to perform delayed GWT.create() invocations.
  */
-public interface GwtCreateFactory {
+public interface RebindFactory {
   
   /**
    * @return an instance of T.

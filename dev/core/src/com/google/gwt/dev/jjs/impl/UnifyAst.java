@@ -485,7 +485,7 @@ public class UnifyAst {
         }
       }
       // Adapt method for rebind
-      JDeclaredType factoryIntf = program.getIndexedType("GwtCreateFactory");
+      JDeclaredType factoryIntf = program.getIndexedType("RebindFactory");
       assert factoryIntf != null;
       JParameter factoryParam =
           new JParameter(x.getSourceInfo(), "$factory", factoryIntf, true, false, x);
@@ -526,7 +526,7 @@ public class UnifyAst {
       } else {
         typeName = signature.getTypeName();
       }
-      JExpression factory = newGwtCreateFactory(x, typeName, ctorArgs);
+      JExpression factory = newRebindFactory(x, typeName, ctorArgs);
       if (factory != null) {
         x.addArg(factory);
       }
@@ -623,11 +623,11 @@ public class UnifyAst {
       }
 
       if (signature != null) {
-        // Call GwtCreateFactory.create()
+        // Call RebindFactory.create()
         JParameter factory = signature.getFactoryParam();
         assert factory != null;
         JParameterRef factoryRef = new JParameterRef(x.getSourceInfo(), factory);
-        JMethod create = program.getIndexedMethod("GwtCreateFactory.create");
+        JMethod create = program.getIndexedMethod("RebindFactory.create");
         JMethodCall createCall = new JMethodCall(x.getSourceInfo(), factoryRef, create);
         return createCall;
       }
@@ -681,7 +681,7 @@ public class UnifyAst {
       throw new InternalCompilerException("Unknown magic method");
     }
 
-    private JNewInstance newGwtCreateFactory(JNode x, String typeName, List<JExpression> args) {
+    private JNewInstance newRebindFactory(JNode x, String typeName, List<JExpression> args) {
       SourceInfo info = x.getSourceInfo().makeChild();
 
       JArgument[] jargs = ExpressionToArgumentTranslator.translate(args);
@@ -691,7 +691,7 @@ public class UnifyAst {
 
       if (factoryCtor == null) {
         // Create a factory type
-        JInterfaceType factoryIntf = (JInterfaceType) program.getIndexedType("GwtCreateFactory");
+        JInterfaceType factoryIntf = (JInterfaceType) program.getIndexedType("RebindFactory");
         JClassType factoryType = new JClassType(info, factoryName, false, true);
         factoryType.setSuperClass(program.getTypeJavaLangObject());
         factoryType.addImplements(factoryIntf);
@@ -736,7 +736,7 @@ public class UnifyAst {
         factoryCtor.freezeParamTypes();
         factoryType.addMethod(factoryCtor);
 
-        // Make GwtCreateFactory.create()
+        // Make RebindFactory.create() call
         JMethod createMethod =
             new JMethod(info, "create", factoryType, program.getTypeJavaLangObject(), false, false,
                 true, AccessModifier.PUBLIC);
