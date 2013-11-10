@@ -19,7 +19,7 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.arguments.JArguments;
-import com.google.gwt.core.ext.arguments.JVariableArgument;
+import com.google.gwt.core.ext.arguments.JOpaqueArgument;
 import com.google.gwt.dev.CompilerContext;
 import com.google.gwt.dev.javac.CompilationProblemReporter;
 import com.google.gwt.dev.javac.CompilationUnit;
@@ -710,7 +710,7 @@ public class UnifyAst {
         factoryCtor.setBody(ctorBody);
         for (int i = 0; i < args.size(); i++) {
           JExpression a = args.get(i);
-          if (jargs[i] instanceof JVariableArgument) {
+          if (jargs[i] instanceof JOpaqueArgument) {
 
             String paramName = "_a" + i;
             JType paramType = a.getType();
@@ -761,7 +761,7 @@ public class UnifyAst {
 
       ArrayList<JExpression> factoryArgs = new ArrayList<JExpression>();
       for (int i = 0; i < jargs.length; i++) {
-        if (jargs[i] instanceof JVariableArgument) {
+        if (jargs[i] instanceof JOpaqueArgument) {
           factoryArgs.add(args.get(i));
         }
       }

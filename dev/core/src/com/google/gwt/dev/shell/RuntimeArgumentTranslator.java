@@ -27,7 +27,7 @@ import com.google.gwt.core.ext.arguments.JIntArgument;
 import com.google.gwt.core.ext.arguments.JLongArgument;
 import com.google.gwt.core.ext.arguments.JNullArgument;
 import com.google.gwt.core.ext.arguments.JStringArgument;
-import com.google.gwt.core.ext.arguments.JVariableArgument;
+import com.google.gwt.core.ext.arguments.JOpaqueArgument;
 
 /**
  * Translates a runtime argument to a compile time argument.
@@ -126,7 +126,7 @@ class RuntimeArgumentTranslator {
       }
       return JArrayArgument.valueOf(elements);
     }
-    return JVariableArgument.value();
+    return JOpaqueArgument.value();
   }
 
   public static JArgument[] translate(Object[] arguments) {

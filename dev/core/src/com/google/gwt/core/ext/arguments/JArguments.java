@@ -64,8 +64,8 @@ public class JArguments {
       JStringArgument cast = (JStringArgument) argument;
       sb.append('S');
       sb.append(Integer.toHexString(cast.getValue().hashCode()));
-    } else if (argument instanceof JVariableArgument) {
-      sb.append('V');
+    } else if (argument instanceof JOpaqueArgument) {
+      sb.append('O');
     }
   }
 

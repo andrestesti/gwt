@@ -25,7 +25,7 @@ import com.google.gwt.core.ext.arguments.JEnumArgument;
 import com.google.gwt.core.ext.arguments.JFloatArgument;
 import com.google.gwt.core.ext.arguments.JIntArgument;
 import com.google.gwt.core.ext.arguments.JLongArgument;
-import com.google.gwt.core.ext.arguments.JVariableArgument;
+import com.google.gwt.core.ext.arguments.JOpaqueArgument;
 import com.google.gwt.core.ext.arguments.JNullArgument;
 import com.google.gwt.core.ext.arguments.JStringArgument;
 import com.google.gwt.dev.jjs.ast.JBooleanLiteral;
@@ -114,7 +114,7 @@ class ExpressionToArgumentTranslator {
         }
       }
     }
-    return JVariableArgument.value();
+    return JOpaqueArgument.value();
   }
 
   public static JArgument[] translate(List<JExpression> expressions) {

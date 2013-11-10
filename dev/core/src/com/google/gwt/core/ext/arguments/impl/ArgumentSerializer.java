@@ -27,7 +27,7 @@ import com.google.gwt.core.ext.arguments.JIntArgument;
 import com.google.gwt.core.ext.arguments.JLongArgument;
 import com.google.gwt.core.ext.arguments.JNullArgument;
 import com.google.gwt.core.ext.arguments.JStringArgument;
-import com.google.gwt.core.ext.arguments.JVariableArgument;
+import com.google.gwt.core.ext.arguments.JOpaqueArgument;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -48,8 +48,8 @@ public class ArgumentSerializer {
   public static final int INT = 7;
   public static final int LONG = 8;
   public static final int NULL = 9;
-  public static final int STRING = 10;
-  public static final int VARIABLE = 11;
+  public static final int OPAQUE = 10;
+  public static final int STRING = 11;
 
   public static void serialize(DataOutput out, JArgument argument) throws IOException {
     if (argument instanceof JArrayArgument) {
@@ -99,8 +99,8 @@ public class ArgumentSerializer {
       out.writeByte(STRING);
       JStringArgument value = (JStringArgument) argument;
       out.writeUTF(value.getValue());
-    } else if (argument instanceof JVariableArgument) {
-      out.writeByte(VARIABLE);
+    } else if (argument instanceof JOpaqueArgument) {
+      out.writeByte(OPAQUE);
     } else {
       throw new RuntimeException("Unknown argument type");
     }
@@ -138,8 +138,8 @@ public class ArgumentSerializer {
         return JLongArgument.valueOf(in.readLong());
       case NULL:
         return JNullArgument.value();
-      case VARIABLE:
-        return JVariableArgument.value();
+      case OPAQUE:
+        return JOpaqueArgument.value();
       case STRING:
         return JStringArgument.valueOf(in.readUTF());
     }
