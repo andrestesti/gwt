@@ -18,19 +18,13 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time char argument.
  */
-public class JCharArgument extends JConstantArgument {
+public class JCharArgument extends JAtomArgument<Character> {
 
   public static JCharArgument valueOf(char value) {
     return new JCharArgument(value);
   }
 
-  private final char value;
-
-  private JCharArgument(char value) {
-    this.value = value;
-  }
-  
-  public char getValue() {
-    return value;
+  private JCharArgument(Character value) {
+    super(value);
   }
 }

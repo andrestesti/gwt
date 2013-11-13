@@ -18,26 +18,36 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time enum argument.
  */
-public class JEnumArgument extends JConstantArgument {
+public class JEnumArgument extends JAtomArgument<JEnumArgument.Value> {
+  
+  /**
+   * Enum value pair.
+   */
+  public static class Value {
+
+    private final int enumOrdinal;
+
+    private final String enumClassName;
+
+    Value(int enumOrdinal, String enumClassName) {
+      this.enumOrdinal = enumOrdinal;
+      this.enumClassName = enumClassName;
+    }
+
+    public String getEnumClassName() {
+      return enumClassName;
+    }
+
+    public int getEnumOrdinal() {
+      return enumOrdinal;
+    }    
+  }
+  
+  JEnumArgument(int enumOrdinal, String enumClassName) {
+    super(new Value(enumOrdinal, enumClassName));
+  }
 
   public static JEnumArgument valueOf(String enumClassName, int enumOrdinal) {
     return new JEnumArgument(enumOrdinal, enumClassName);
-  }
-
-  private final int enumOrdinal;
-
-  private final String enumClassName;
-
-  private JEnumArgument(int enumOrdinal, String enumClassName) {
-    this.enumOrdinal = enumOrdinal;
-    this.enumClassName = enumClassName;
-  }
-
-  public String getEnumClassName() {
-    return enumClassName;
-  }
-
-  public int getEnumOrdinal() {
-    return enumOrdinal;
   }
 }

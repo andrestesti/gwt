@@ -18,19 +18,13 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time long argument.
  */
-public class JLongArgument extends JConstantArgument {
+public class JLongArgument extends JAtomArgument<Long> {
   
   public static JLongArgument valueOf(long value) {
     return new JLongArgument(value);
   }
-  
-  private final long value;
-  
-  private JLongArgument(long value) {
-    this.value = value;
-  }
     
-  public long getValue() {
-    return value;
+  private JLongArgument(Long value) {
+    super(value);
   }
 }

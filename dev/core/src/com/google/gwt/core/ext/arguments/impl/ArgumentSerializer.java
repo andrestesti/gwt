@@ -71,14 +71,14 @@ public class ArgumentSerializer {
     } else if (argument instanceof JClassArgument) {
       out.writeByte(CLASS);
       JClassArgument value = (JClassArgument) argument;
-      out.writeUTF(value.getClassName());
+      out.writeUTF(value.getValue());
     } else if (argument instanceof JDoubleArgument) {
       out.writeByte(DOUBLE);
       JDoubleArgument value = (JDoubleArgument) argument;
       out.writeDouble(value.getValue());
     } else if (argument instanceof JEnumArgument) {
       out.writeByte(ENUM);
-      JEnumArgument value = (JEnumArgument) argument;
+      JEnumArgument.Value value = ((JEnumArgument) argument).getValue();
       out.writeUTF(value.getEnumClassName());
       out.writeInt(value.getEnumOrdinal());
     } else if (argument instanceof JFloatArgument) {

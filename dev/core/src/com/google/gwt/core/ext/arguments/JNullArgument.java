@@ -18,7 +18,7 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time null argument.
  */
-public class JNullArgument extends JConstantArgument {
+public class JNullArgument extends JAtomArgument<Void> {
 
   private static final JNullArgument INSTANCE = new JNullArgument();
 
@@ -27,5 +27,6 @@ public class JNullArgument extends JConstantArgument {
   }
 
   private JNullArgument() {
+    super(null);
   }
 }

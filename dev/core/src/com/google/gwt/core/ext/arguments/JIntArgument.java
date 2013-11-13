@@ -18,19 +18,13 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time int argument.
  */
-public class JIntArgument extends JConstantArgument {
+public class JIntArgument extends JAtomArgument<Integer> {
 
   public static JIntArgument valueOf(int value) {
     return new JIntArgument(value);
   }
 
-  private final int value;
-
-  private JIntArgument(int value) {
-    this.value = value;
-  }
-
-  public int getValue() {
-    return value;
+  private JIntArgument(Integer value) {
+    super(value);
   }
 }

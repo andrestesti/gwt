@@ -18,19 +18,13 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time String argument.
  */
-public class JStringArgument extends JConstantArgument {
+public class JStringArgument extends JAtomArgument<String> {
 
   public static JStringArgument valueOf(String value) {
     return new JStringArgument(value);
   }
 
-  private final String value;
-
   private JStringArgument(String value) {
-    this.value = value;
-  }
-  
-  public String getValue() {
-    return value;
+    super(value);
   }
 }

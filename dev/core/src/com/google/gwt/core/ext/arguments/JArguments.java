@@ -30,7 +30,7 @@ public class JArguments {
     } else if (argument instanceof JClassArgument) {
       JClassArgument cast = (JClassArgument) argument;
       sb.append('C');
-      sb.append(Integer.toHexString(cast.getClassName().hashCode()));
+      sb.append(Integer.toHexString(cast.getValue().hashCode()));
     } else if (argument instanceof JArrayArgument) {
       JArrayArgument cast = (JArrayArgument) argument;
       sb.append('A');
@@ -41,7 +41,7 @@ public class JArguments {
       sb.append('D');
       sb.append(Long.toHexString(Double.doubleToRawLongBits(cast.getValue())));
     } else if (argument instanceof JEnumArgument) {
-      JEnumArgument cast = (JEnumArgument) argument;
+      JEnumArgument.Value cast = ((JEnumArgument) argument).getValue();
       sb.append('E');
       sb.append(Integer.toHexString(cast.getEnumClassName().hashCode()));
       sb.append('o');

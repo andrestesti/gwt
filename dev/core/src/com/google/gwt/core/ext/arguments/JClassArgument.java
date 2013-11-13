@@ -18,19 +18,13 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time class argument.
  */
-public class JClassArgument extends JConstantArgument {
+public class JClassArgument extends JAtomArgument<String> {
   
   public static JClassArgument valueOf(String className) {
     return new JClassArgument(className);
   }
-  
-  private final String className;
-  
-  private JClassArgument(String className) {
-    this.className = className;
-  }
     
-  public String getClassName() {
-    return className;
+  private JClassArgument(String className) {
+    super(className);
   }
 }
