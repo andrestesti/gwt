@@ -1,0 +1,9 @@
+<project name="hellorebinding" default="build" basedir=".">
+  <property name="sample.root" value="hellorebinding" />
+  <property name="sample.module" value="HelloRebinding" />
+  <property name="sample.path" value="src" />
+  <import file="../common.ant.xml" />
+  <!-- these are after the common.ant.xml so they have gwt.tools... -->
+  <path id="sample.extraclasspath">
+  </path>
+</project>

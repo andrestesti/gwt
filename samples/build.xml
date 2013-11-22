@@ -17,6 +17,10 @@
   <target name="hello" description="Build hello">
     <gwt.ant dir="hello" />
   </target>
+  
+  <target name="hellorebinding" description="Build hellorebinding">
+    <gwt.ant dir="hellorebinding" />
+  </target>
 
   <target name="json" description="Build json">
     <gwt.ant dir="json" />
@@ -50,6 +54,7 @@
     <antcall target="dynatable" />
     <antcall target="dynatablerf" />
     <antcall target="hello" />
+	<antcall target="hellorebinding" />
     <antcall target="json" />
     <antcall target="logexample" />
     <antcall target="mail" />
