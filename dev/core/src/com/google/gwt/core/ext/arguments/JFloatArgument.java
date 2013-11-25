@@ -18,7 +18,7 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time float argument.
  */
-public class JFloatArgument extends JAtomArgument<Float> {
+public class JFloatArgument extends JAtomicArgument<Float> {
 
   public static JFloatArgument valueOf(float value) {
     return new JFloatArgument(value);

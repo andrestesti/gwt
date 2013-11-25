@@ -13,18 +13,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.google.gwt.core.ext.arguments;
+package com.google.gwt.sample.hellorebinding.client.util;
 
 /**
- * Compile time double argument.
+ * Formatter for {@link String}s for exclusive use of generators.
  */
-public class JDoubleArgument extends JAtomicArgument<Double> {
+public interface StringFormatter {
   
-  public static JDoubleArgument valueOf(double value) {
-    return new JDoubleArgument(value);
-  }
-    
-  private JDoubleArgument(Double value) {
-    super(value);
-  }
+  /**
+   * Returns a formatted {@link String}.
+   */
+  String format();  
 }

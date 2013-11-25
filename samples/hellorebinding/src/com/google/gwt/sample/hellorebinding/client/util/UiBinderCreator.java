@@ -13,20 +13,19 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.google.gwt.core.ext.arguments;
+package com.google.gwt.sample.hellorebinding.client.util;
+
+import com.google.gwt.uibinder.client.UiBinder;
 
 /**
- * Single value argument.
- * @param <T> value type.
+ * Creator for {@link UiBinder} for exclusive use of generators.
+ * @param <U>
+ * @param <O>
  */
-public abstract class JAtomArgument<T> extends JConstantArgument {
-  private final T value;
-
-  JAtomArgument(T value) {
-    this.value = value;
-  }
-
-  public T getValue() {
-    return value;
-  }
+public interface UiBinderCreator<U, O> {
+  
+  /**
+   * Creates an {@link UiBinder}.
+   */
+  UiBinder<U, O>  createUiBinder();
 }

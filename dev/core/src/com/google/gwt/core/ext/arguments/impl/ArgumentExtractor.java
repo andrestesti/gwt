@@ -34,7 +34,7 @@ public class ArgumentExtractor {
       return new JArgument[0];
     }
 
-    DataInput in = ByteStreams.newDataInput(annotation.bytes().getBytes());
+    DataInput in = ByteStreams.newDataInput(annotation.bytes());
     JArgument[] arguments = new JArgument[annotation.size()];
 
     for (int i = 0; i < arguments.length; i++) {

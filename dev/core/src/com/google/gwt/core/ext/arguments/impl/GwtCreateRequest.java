@@ -24,5 +24,5 @@ import java.lang.annotation.Target;
 public @interface GwtCreateRequest {
   String typeName();
   int size();
-  String bytes();
+  byte[] bytes();
 }

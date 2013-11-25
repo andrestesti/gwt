@@ -16,15 +16,17 @@
 package com.google.gwt.core.ext.arguments;
 
 /**
- * Compile time double argument.
+ * Single value argument.
+ * @param <T> value type.
  */
-public class JDoubleArgument extends JAtomicArgument<Double> {
-  
-  public static JDoubleArgument valueOf(double value) {
-    return new JDoubleArgument(value);
+public abstract class JAtomicArgument<T> extends JConstantArgument {
+  private final T value;
+
+  JAtomicArgument(T value) {
+    this.value = value;
   }
-    
-  private JDoubleArgument(Double value) {
-    super(value);
+
+  public T getValue() {
+    return value;
   }
 }

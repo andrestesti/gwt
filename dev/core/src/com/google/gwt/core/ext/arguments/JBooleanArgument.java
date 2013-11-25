@@ -18,7 +18,7 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time boolean argument.
  */
-public class JBooleanArgument extends JAtomArgument<Boolean> {
+public class JBooleanArgument extends JAtomicArgument<Boolean> {
 
   private static final JBooleanArgument FALSE = new JBooleanArgument(false);
   private static final JBooleanArgument TRUE = new JBooleanArgument(true);

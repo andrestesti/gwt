@@ -18,7 +18,7 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time long argument.
  */
-public class JLongArgument extends JAtomArgument<Long> {
+public class JLongArgument extends JAtomicArgument<Long> {
   
   public static JLongArgument valueOf(long value) {
     return new JLongArgument(value);

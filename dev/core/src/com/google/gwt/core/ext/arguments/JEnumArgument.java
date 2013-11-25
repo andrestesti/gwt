@@ -18,7 +18,7 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time enum argument.
  */
-public class JEnumArgument extends JAtomArgument<JEnumArgument.Value> {
+public class JEnumArgument extends JAtomicArgument<JEnumArgument.Value> {
   
   /**
    * Enum value pair.

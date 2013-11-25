@@ -18,7 +18,7 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time String argument.
  */
-public class JStringArgument extends JAtomArgument<String> {
+public class JStringArgument extends JAtomicArgument<String> {
 
   public static JStringArgument valueOf(String value) {
     return new JStringArgument(value);

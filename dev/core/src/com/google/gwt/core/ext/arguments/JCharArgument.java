@@ -18,7 +18,7 @@ package com.google.gwt.core.ext.arguments;
 /**
  * Compile time char argument.
  */
-public class JCharArgument extends JAtomArgument<Character> {
+public class JCharArgument extends JAtomicArgument<Character> {
 
   public static JCharArgument valueOf(char value) {
     return new JCharArgument(value);
