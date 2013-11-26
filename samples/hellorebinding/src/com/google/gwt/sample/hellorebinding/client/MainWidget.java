@@ -33,7 +33,9 @@ public class MainWidget extends Composite {
   private static final String APP_NAME = "HelloRebinding";
       
   public MainWidget() {
-    // No boilerplate to bind user interfaces.
+    /*
+     * No boilerplate to bind user interfaces.
+	 */
     initWidget(UiBinders.createAndBindUi(Widget.class, MainWidget.class, this));
   }
   
