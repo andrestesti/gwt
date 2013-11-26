@@ -52,7 +52,7 @@ public class MainWidget extends Composite {
        * See the generated files.
        */
       String message = 
-          Strings.format("Hello %s, you are welcome to %s application.", name.getValue(), APP_NAME);
+          Strings.format("Hello %s, you are welcome to %s app.", name.getValue(), APP_NAME);
       Window.alert(message);
     }
   }
