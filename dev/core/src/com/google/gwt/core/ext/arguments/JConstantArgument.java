@@ -21,4 +21,9 @@ package com.google.gwt.core.ext.arguments;
 public abstract class JConstantArgument extends JArgument {
   JConstantArgument() {
   }
+  
+  @Override
+  public boolean hasOpaqueReferences() {
+    return false;
+  }
 }

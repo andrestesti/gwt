@@ -33,4 +33,14 @@ public class JArrayArgument extends JConstantArgument {
   public JArgument[] getElements() {
     return elements.clone();
   }
+  
+  @Override
+  public boolean hasOpaqueReferences() {
+    for (JArgument e : elements) {
+      if (e.hasOpaqueReferences()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

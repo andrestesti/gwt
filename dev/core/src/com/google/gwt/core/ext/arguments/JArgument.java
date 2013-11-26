@@ -19,4 +19,6 @@ package com.google.gwt.core.ext.arguments;
 public abstract class JArgument {
   JArgument() {
   }
+  
+  public abstract boolean hasOpaqueReferences();
 }

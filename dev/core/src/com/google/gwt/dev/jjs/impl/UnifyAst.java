@@ -19,7 +19,6 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.arguments.JArguments;
-import com.google.gwt.core.ext.arguments.JOpaqueArgument;
 import com.google.gwt.dev.CompilerContext;
 import com.google.gwt.dev.javac.CompilationProblemReporter;
 import com.google.gwt.dev.javac.CompilationUnit;
@@ -31,11 +30,11 @@ import com.google.gwt.dev.jjs.JJSOptions;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
 import com.google.gwt.dev.jjs.ast.AccessModifier;
-import com.google.gwt.dev.jjs.ast.RebindSignature;
 import com.google.gwt.dev.jjs.ast.Context;
 import com.google.gwt.dev.jjs.ast.HasName;
 import com.google.gwt.dev.jjs.ast.JArrayType;
 import com.google.gwt.dev.jjs.ast.JBinaryOperation;
+import com.google.gwt.dev.jjs.ast.JBinaryOperator;
 import com.google.gwt.dev.jjs.ast.JBlock;
 import com.google.gwt.dev.jjs.ast.JBooleanLiteral;
 import com.google.gwt.dev.jjs.ast.JCastOperation;
@@ -53,6 +52,9 @@ import com.google.gwt.dev.jjs.ast.JFieldRef;
 import com.google.gwt.dev.jjs.ast.JGwtCreate;
 import com.google.gwt.dev.jjs.ast.JInstanceOf;
 import com.google.gwt.dev.jjs.ast.JInterfaceType;
+import com.google.gwt.dev.jjs.ast.JLiteral;
+import com.google.gwt.dev.jjs.ast.JLocal;
+import com.google.gwt.dev.jjs.ast.JLocalRef;
 import com.google.gwt.dev.jjs.ast.JMethod;
 import com.google.gwt.dev.jjs.ast.JMethodBody;
 import com.google.gwt.dev.jjs.ast.JMethodCall;
@@ -74,6 +76,8 @@ import com.google.gwt.dev.jjs.ast.JThisRef;
 import com.google.gwt.dev.jjs.ast.JTryStatement;
 import com.google.gwt.dev.jjs.ast.JType;
 import com.google.gwt.dev.jjs.ast.JVariable;
+import com.google.gwt.dev.jjs.ast.JVariableRef;
+import com.google.gwt.dev.jjs.ast.RebindSignature;
 import com.google.gwt.dev.jjs.ast.js.JDebuggerStatement;
 import com.google.gwt.dev.jjs.ast.js.JsniFieldRef;
 import com.google.gwt.dev.jjs.ast.js.JsniMethodBody;
@@ -134,6 +138,7 @@ public class UnifyAst {
   private class UnifyVisitor extends JModVisitor {
 
     private JMethod currentMethod;
+    private int tempCount;
 
     @Override
     public void endVisit(JArrayType x, Context ctx) {
@@ -246,6 +251,7 @@ public class UnifyAst {
     @Override
     public void endVisit(JMethod x, Context ctx) {
       currentMethod = null;
+      tempCount = 0;
     }
 
     @Override
@@ -369,6 +375,7 @@ public class UnifyAst {
     @Override
     public boolean visit(JMethod x, Context ctx) {
       currentMethod = x;
+      tempCount = 0;
       return ensureRebindMethod(x);
     }
 
@@ -507,8 +514,26 @@ public class UnifyAst {
       }
       ArrayList<JExpression> ctorArgs = new ArrayList<JExpression>();
       List<JExpression> args = x.getArgs();
+      SourceInfo info = x.getSourceInfo();
       for (Integer i : signature.getCtorParamIndices()) {
-        ctorArgs.add(args.get(i));
+        JExpression exp = args.get(i);
+        JExpression a;
+        if ((exp instanceof JVariableRef) || (exp instanceof JLiteral)) {
+          a = exp;
+        } else if (exp instanceof JBinaryOperation && ((JBinaryOperation) exp).isAssignment()) {
+          a = ((JBinaryOperation) exp).getLhs();
+        } else {
+          String tempName = "$temp" + tempCount++;
+          
+          assert currentMethod.getBody() instanceof JMethodBody;
+          JMethodBody body = (JMethodBody) currentMethod.getBody();
+          JLocal temp = JProgram.createLocal(info, tempName, exp.getType(), false, body);
+          a = new JLocalRef(info, temp);
+          JBinaryOperation assignation =
+              new JBinaryOperation(info, exp.getType(), JBinaryOperator.ASG, a, exp);
+          x.setArg(i, assignation);
+        }
+        ctorArgs.add(a);
       }
       String typeName;
       if (signature.hasTypeParam()) {
@@ -680,7 +705,7 @@ public class UnifyAst {
       }
       throw new InternalCompilerException("Unknown magic method");
     }
-
+    
     private JNewInstance newRebindFactory(JNode x, String typeName, List<JExpression> args) {
       SourceInfo info = x.getSourceInfo().makeChild();
 
@@ -709,11 +734,10 @@ public class UnifyAst {
         JMethodBody ctorBody = new JMethodBody(info);
         factoryCtor.setBody(ctorBody);
         for (int i = 0; i < args.size(); i++) {
-          JExpression a = args.get(i);
-          if (jargs[i] instanceof JOpaqueArgument) {
-
+          JExpression exp = args.get(i);
+          if (jargs[i].hasOpaqueReferences()) {
             String paramName = "_a" + i;
-            JType paramType = a.getType();
+            JType paramType = exp.getType();
             JParameter param =
                 JParameter.create(info, paramName, paramType, true, false, factoryCtor);
 
@@ -730,7 +754,7 @@ public class UnifyAst {
                 JProgram.createAssignmentStmt(x.getSourceInfo(), caCtor, paramRef);
             ctorBody.getBlock().addStmt(asg);
           } else {
-            ctorArgs.add(a);
+            ctorArgs.add(exp);
           }
         }
         factoryCtor.freezeParamTypes();
@@ -761,7 +785,7 @@ public class UnifyAst {
 
       ArrayList<JExpression> factoryArgs = new ArrayList<JExpression>();
       for (int i = 0; i < jargs.length; i++) {
-        if (jargs[i] instanceof JOpaqueArgument) {
+        if (jargs[i].hasOpaqueReferences()) { 
           factoryArgs.add(args.get(i));
         }
       }

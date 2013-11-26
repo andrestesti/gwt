@@ -28,4 +28,9 @@ public class JOpaqueArgument extends JArgument {
 
   private JOpaqueArgument() {
   }
+  
+  @Override
+  public boolean hasOpaqueReferences() {
+    return true;
+  }
 }

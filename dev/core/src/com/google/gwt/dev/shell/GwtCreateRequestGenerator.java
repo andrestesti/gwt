@@ -67,7 +67,17 @@ public class GwtCreateRequestGenerator {
       pw.printf("@%s(\n", GwtCreateRequest.class.getCanonicalName());
       pw.printf("  typeName = \"%s\",\n", Generator.escape(typeName));
       pw.printf("  size = %d,\n", args.length);
-      pw.printf("  bytes = \"%s\"\n", Generator.escape(new String(bytes)));
+      pw.print("  bytes = { ");
+      boolean hasSeparator = false;
+      for (byte b : bytes) {
+        if (hasSeparator) {
+          pw.print(", ");
+        } else {
+          hasSeparator = true;
+        }
+        pw.print(b);
+      }
+      pw.println(" }");      
       pw.println(")");
       pw.println("final class " + requestTypeSimpleName + " {");
       pw.println("  private " + requestTypeSimpleName + "() {}");
