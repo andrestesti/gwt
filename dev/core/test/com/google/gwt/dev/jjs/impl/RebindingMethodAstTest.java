@@ -21,9 +21,9 @@ import com.google.gwt.dev.jjs.ast.JMethod;
 import com.google.gwt.dev.jjs.ast.JProgram;
 
 /**
- * Tests AST of rebind methods.
+ * Tests AST of rebinding methods.
  */
-public class RebindMethodAstTest extends JJSTestBase {
+public class RebindingMethodAstTest extends JJSTestBase {
 
   private JProgram program;
 
@@ -69,8 +69,8 @@ public class RebindMethodAstTest extends JJSTestBase {
     }
   }
 
-  public void testRebindSignature() {    
-    JMethod rebindMethod = findQualifiedMethod(program, "test.CreatorImpl.create");
-    assertNotNull(rebindMethod.getSignature());
+  public void testRebindingSignature() {    
+    JMethod rebindingMethod = findQualifiedMethod(program, "test.CreatorImpl.create");
+    assertNotNull(rebindingMethod.getRebindingSignature());
   }
 }

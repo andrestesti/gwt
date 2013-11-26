@@ -45,8 +45,12 @@ public class MainWidget extends Composite {
     if (name.getValue().isEmpty()) {
       Window.alert("Please, enter your name");
     } else {
+      /*
+       * The StringFormatterGenerator process the format String in compile time.
+       * See the generated files.
+       */
       String message = 
-          Strings.format("Hello %s, you are welcome to %s application", name.getValue(), APP_NAME);
+          Strings.format("Hello %s, you are welcome to %s application.", name.getValue(), APP_NAME);
       Window.alert(message);
     }
   }

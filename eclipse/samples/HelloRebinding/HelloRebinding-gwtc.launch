@@ -17,7 +17,7 @@
 </listAttribute>
 <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.google.gwt.dev.Compiler"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="com.google.gwt.sample.hellorebinding.HelloRebinding&#10;-gen gen"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="com.google.gwt.sample.hellorebinding.HelloRebinding"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="HelloRebinding"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-ea&#13;&#10;-Xmx256M&#13;&#10;-Dgwt.devjar=${gwt_devjar}"/>
 </launchConfiguration>

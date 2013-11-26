@@ -194,13 +194,13 @@ public class JavaAstConstructor {
       return code;
     }
   };
-  public static final MockJavaResource REBINDFACTORY = new MockJavaResource(
-      "com.google.gwt.lang.RebindFactory") {
+  public static final MockJavaResource REBINDINGFACTORY = new MockJavaResource(
+      "com.google.gwt.lang.RebindingFactory") {
     @Override
     public CharSequence getContent() {
       StringBuilder code = new StringBuilder();
       code.append("package com.google.gwt.lang;\n");
-      code.append("public interface RebindFactory {\n");
+      code.append("public interface RebindingFactory {\n");
       code.append("  <T> T create();\n");
       code.append("}\n");
       return code;
@@ -271,7 +271,7 @@ public class JavaAstConstructor {
     result.remove(JavaResourceBase.CLASS);
     result.remove(JavaResourceBase.ENUM);
     Collections.addAll(result, ASYNCFRAGMENTLOADER, ARRAY, CAST, CLASS, CLASSLITERALHOLDER, ENUM,
-        GWT, GWT_SHARED, REBIND, REBINDFACTORY, RUNASYNCCALLBACK, RUNASYNCCODE);
+        GWT, GWT_SHARED, REBIND, REBINDINGFACTORY, RUNASYNCCALLBACK, RUNASYNCCODE);
     return result.toArray(new MockJavaResource[result.size()]);
   }
 }

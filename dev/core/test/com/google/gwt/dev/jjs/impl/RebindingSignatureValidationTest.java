@@ -21,9 +21,9 @@ import com.google.gwt.dev.javac.testing.impl.MockJavaResource;
 import com.google.gwt.dev.util.UnitTestTreeLogger;
 
 /**
- * Tests validation of rebind method signature.
+ * Tests validation of rebinding method signature.
  */
-public class RebindMethodValidationTest extends JJSTestBase {
+public class RebindingSignatureValidationTest extends JJSTestBase {
   
   public void testTypeParamAlreadyDefined() {
     sourceOracle.addOrReplace(new MockJavaResource("test.TypeParamAlreadyDefined") {
@@ -128,7 +128,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
       builder.setLowestLogLevel(TreeLogger.ERROR);
       builder.expectError("Errors in 'test/BadCtorParamOverrideImpl.java'", null);
       builder.expectError(
-          "Line 5: Overriding method must complain the rebind method signature", null);
+          "Line 5: Overriding method must complain the rebinding method signature", null);
       logger = builder.createLogger();
       this.logger = logger;
     }
@@ -176,7 +176,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
       builder.setLowestLogLevel(TreeLogger.ERROR);
       builder.expectError("Errors in 'test/BadTypeParamOverrideImpl.java'", null);
       builder.expectError(
-          "Line 4: Overriding method must complain the rebind method signature", null);
+          "Line 4: Overriding method must complain the rebinding method signature", null);
       logger = builder.createLogger();
       this.logger = logger;
     }
@@ -224,7 +224,7 @@ public class RebindMethodValidationTest extends JJSTestBase {
       builder.setLowestLogLevel(TreeLogger.ERROR);
       builder.expectError("Errors in 'test/BadTypeOverrideImpl.java'", null);
       builder.expectError(
-          "Line 4: Overriding method must complain the rebind method signature", null);
+          "Line 4: Overriding method must complain the rebinding method signature", null);
       logger = builder.createLogger();
       this.logger = logger;
     }

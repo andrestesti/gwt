@@ -100,7 +100,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
    * Special serialization treatment.
    */
   private transient JAbstractMethodBody body = null;
-  private RebindSignature rebindSignature = null;
+  private JRebindingSignature rebindingSignature = null;
   private final JDeclaredType enclosingType;
   private boolean isAbstract;
   private boolean isFinal;
@@ -256,8 +256,8 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return params;
   }
 
-  public RebindSignature getRebindSignature() {
-    return rebindSignature;
+  public JRebindingSignature getRebindingSignature() {
+    return rebindingSignature;
   }
   
   public String getSignature() {
@@ -288,35 +288,35 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
   }
   
   /**
-   * Determines if this method has an isomorphic rebind signature with another
-   * method. This would check if an overriding method chain complains the 
-   * rebind signature.
+   * Determines if this method has an isomorphic rebinding signature with 
+   * another method. This could check if an overriding method chain complains
+   *  the rebinding signature.
    */
   public boolean hasIsomorphicRebindSignature(JMethod other) {
-    RebindSignature otherRebindSignature = other.getRebindSignature();
-    if (rebindSignature == null) {
-      return otherRebindSignature == null;
+    JRebindingSignature otherRebindingSignature = other.getRebindingSignature();
+    if (rebindingSignature == null) {
+      return otherRebindingSignature == null;
     }
-    if (otherRebindSignature == null) {
+    if (otherRebindingSignature == null) {
       return false;
     }
-    if (rebindSignature.hasTypeParam()) {
-      if (!otherRebindSignature.hasTypeParam()) {
+    if (rebindingSignature.hasTypeParam()) {
+      if (!otherRebindingSignature.hasTypeParam()) {
         return false;
       }
-      if (rebindSignature.getTypeParamIndex() != otherRebindSignature.getTypeParamIndex()) {
+      if (rebindingSignature.getTypeParamIndex() != otherRebindingSignature.getTypeParamIndex()) {
         return false;
       }
     } else {
-      if (otherRebindSignature.hasTypeParam()) {
+      if (otherRebindingSignature.hasTypeParam()) {
         return false;
       }
-      if (!rebindSignature.getTypeName().equals(otherRebindSignature.getTypeName())) {
+      if (!rebindingSignature.getTypeName().equals(otherRebindingSignature.getTypeName())) {
         return false;
       }
     }
-    List<Integer> thisIndices = rebindSignature.getCtorParamIndices();
-    List<Integer> otherIndices = otherRebindSignature.getCtorParamIndices();
+    List<Integer> thisIndices = rebindingSignature.getCtorParamIndices();
+    List<Integer> otherIndices = otherRebindingSignature.getCtorParamIndices();
     if (thisIndices.size() != otherIndices.size()) {
       return false;
     }
@@ -445,8 +445,8 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     }
   }
 
-  public void setRebindSignature(RebindSignature rebindSignature) {
-    this.rebindSignature = rebindSignature;
+  public void setRebindingSignature(JRebindingSignature rebindingSignature) {
+    this.rebindingSignature = rebindingSignature;
   }
   
   public void setSynthetic() {

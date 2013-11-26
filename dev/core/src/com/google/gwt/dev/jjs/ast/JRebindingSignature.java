@@ -19,9 +19,9 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Codegen atributes for methods.
+ * Rebinding signature for methods.
  */
-public class RebindSignature implements Serializable {
+public class JRebindingSignature implements Serializable {
 
   private JMethod method;
   private String typeName;
@@ -30,7 +30,7 @@ public class RebindSignature implements Serializable {
   
   private JParameter factoryParam = null;
 
-  public RebindSignature(JMethod method, String typeName, int typeParamIndex,
+  public JRebindingSignature(JMethod method, String typeName, int typeParamIndex,
       List<Integer> ctorParamIndices) {
     this.method = method;
     this.typeName = typeName;

@@ -997,7 +997,7 @@ public class JProgram extends JNode {
         "java.lang.AssertionError", "java.lang.Boolean", "java.lang.Byte", "java.lang.Character",
         "java.lang.Short", "java.lang.Integer", "java.lang.Long", "java.lang.Float",
         "java.lang.Double", "java.lang.Throwable", "com.google.gwt.core.client.GWT",
-        JProgram.JAVASCRIPTOBJECT, "com.google.gwt.lang.RebindFactory",
+        JProgram.JAVASCRIPTOBJECT, "com.google.gwt.lang.RebindingFactory",
         "com.google.gwt.lang.ClassLiteralHolder",
         "com.google.gwt.core.client.RunAsyncCallback",
         "com.google.gwt.core.client.impl.AsyncFragmentLoader",
