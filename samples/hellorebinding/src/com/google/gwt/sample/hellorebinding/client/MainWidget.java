@@ -35,7 +35,7 @@ public class MainWidget extends Composite {
   public MainWidget() {
     /*
      * No boilerplate to bind user interfaces.
-	 */
+     */
     initWidget(UiBinders.createAndBindUi(Widget.class, MainWidget.class, this));
   }
   
