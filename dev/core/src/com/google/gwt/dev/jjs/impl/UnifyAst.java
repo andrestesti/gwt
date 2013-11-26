@@ -52,7 +52,6 @@ import com.google.gwt.dev.jjs.ast.JFieldRef;
 import com.google.gwt.dev.jjs.ast.JGwtCreate;
 import com.google.gwt.dev.jjs.ast.JInstanceOf;
 import com.google.gwt.dev.jjs.ast.JInterfaceType;
-import com.google.gwt.dev.jjs.ast.JLiteral;
 import com.google.gwt.dev.jjs.ast.JLocal;
 import com.google.gwt.dev.jjs.ast.JLocalRef;
 import com.google.gwt.dev.jjs.ast.JMethod;
@@ -76,7 +75,6 @@ import com.google.gwt.dev.jjs.ast.JThisRef;
 import com.google.gwt.dev.jjs.ast.JTryStatement;
 import com.google.gwt.dev.jjs.ast.JType;
 import com.google.gwt.dev.jjs.ast.JVariable;
-import com.google.gwt.dev.jjs.ast.JVariableRef;
 import com.google.gwt.dev.jjs.ast.RebindSignature;
 import com.google.gwt.dev.jjs.ast.js.JDebuggerStatement;
 import com.google.gwt.dev.jjs.ast.js.JsniFieldRef;
@@ -516,25 +514,31 @@ public class UnifyAst {
       List<JExpression> args = x.getArgs();
       SourceInfo info = x.getSourceInfo();
       for (Integer i : signature.getCtorParamIndices()) {
-        JExpression exp = args.get(i);
+        ctorArgs.add(args.get(i));
+      }
+      
+      JArgument[] jargs = ExpressionToArgumentTranslator.translate(ctorArgs);
+      ArrayList<JExpression> unifiedCtorArgs = new ArrayList<JExpression>();
+      
+      for (int i = 0; i < jargs.length; i++) {
+        JExpression exp = ctorArgs.get(i);
         JExpression a;
-        if ((exp instanceof JVariableRef) || (exp instanceof JLiteral)) {
-          a = exp;
-        } else if (exp instanceof JBinaryOperation && ((JBinaryOperation) exp).isAssignment()) {
-          a = ((JBinaryOperation) exp).getLhs();
-        } else {
-          String tempName = "$temp" + tempCount++;
-          
+        if (jargs[i].hasOpaqueReferences()) {
           assert currentMethod.getBody() instanceof JMethodBody;
           JMethodBody body = (JMethodBody) currentMethod.getBody();
+          String tempName = "$temp" + tempCount++;
           JLocal temp = JProgram.createLocal(info, tempName, exp.getType(), false, body);
+          JLocalRef lhs = new JLocalRef(info, temp);
           a = new JLocalRef(info, temp);
-          JBinaryOperation assignation =
-              new JBinaryOperation(info, exp.getType(), JBinaryOperator.ASG, a, exp);
-          x.setArg(i, assignation);
+          JBinaryOperation asg =
+              new JBinaryOperation(info, exp.getType(), JBinaryOperator.ASG, lhs, exp);
+          x.setArg(i, asg);
+        } else {
+          a = exp;
         }
-        ctorArgs.add(a);
+        unifiedCtorArgs.add(a);
       }
+      
       String typeName;
       if (signature.hasTypeParam()) {
         JExpression typeParam = args.get(signature.getTypeParamIndex());
@@ -551,7 +555,7 @@ public class UnifyAst {
       } else {
         typeName = signature.getTypeName();
       }
-      JExpression factory = newRebindFactory(x, typeName, ctorArgs);
+      JExpression factory = newRebindFactory(x, typeName, jargs, unifiedCtorArgs);
       if (factory != null) {
         x.addArg(factory);
       }
@@ -706,10 +710,10 @@ public class UnifyAst {
       throw new InternalCompilerException("Unknown magic method");
     }
     
-    private JNewInstance newRebindFactory(JNode x, String typeName, List<JExpression> args) {
+    private JNewInstance newRebindFactory(JNode x, String typeName, JArgument[] jargs, 
+        List<JExpression> args) {      
       SourceInfo info = x.getSourceInfo().makeChild();
 
-      JArgument[] jargs = ExpressionToArgumentTranslator.translate(args);
       String key = JArguments.getKey(jargs);
       String factoryName = typeName + "_factory" + key;
       JConstructor factoryCtor = factoryCtors.get(factoryName);
@@ -717,9 +721,10 @@ public class UnifyAst {
       if (factoryCtor == null) {
         // Create a factory type
         JInterfaceType factoryIntf = (JInterfaceType) program.getIndexedType("RebindFactory");
-        JClassType factoryType = new JClassType(info, factoryName, false, true);
+        JClassType factoryType = new JClassType(info, factoryName, false, false);
         factoryType.setSuperClass(program.getTypeJavaLangObject());
         factoryType.addImplements(factoryIntf);
+        // factoryType.setFinal();
 
         JMethod clinit =
             new JMethod(x.getSourceInfo(), "$clinit", factoryType, JPrimitiveType.VOID, false,
@@ -743,7 +748,7 @@ public class UnifyAst {
 
             JParameterRef paramRef = new JParameterRef(info, param);
             JField field =
-                new JField(info, paramName, factoryType, paramType, false, Disposition.FINAL);
+                new JField(info, paramName, factoryType, paramType, false, Disposition.NONE);
             factoryType.addField(field);
 
             JFieldRef caCtor =
@@ -759,11 +764,12 @@ public class UnifyAst {
         }
         factoryCtor.freezeParamTypes();
         factoryType.addMethod(factoryCtor);
+        // factoryCtor.setSynthetic();
 
         // Make RebindFactory.create() call
         JMethod createMethod =
             new JMethod(info, "create", factoryType, program.getTypeJavaLangObject(), false, false,
-                true, AccessModifier.PUBLIC);
+                false, AccessModifier.PUBLIC);
 
         JMethodBody createBody = new JMethodBody(info);
         createMethod.setBody(createBody);
@@ -775,6 +781,7 @@ public class UnifyAst {
 
         createMethod.freezeParamTypes();
         factoryType.addMethod(createMethod);
+        createMethod.setSynthetic();
 
         // add this new class
         program.addType(factoryType);
