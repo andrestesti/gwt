@@ -71,7 +71,7 @@ public class StandardRebindOracle implements RebindOracle {
           return typeName;
         }
 
-        GwtCreateRequestGenerator.generate(logger, genCtx, typeName, requestTypeName, args);
+        RebindingRequestGenerator.generate(logger, genCtx, typeName, requestTypeName, args);
 
         CachedGeneratorResult cachedResult = rebindCacheGet(rule, requestTypeName);
         if (cachedResult != null) {
@@ -280,7 +280,7 @@ public class StandardRebindOracle implements RebindOracle {
   public TypeNames rebind(TreeLogger logger, String typeName, JArgument[] args,
       ArtifactAcceptor artifactAcceptor) throws UnableToCompleteException {
 
-    String requestTypeName = GwtCreateRequestGenerator.getRequestTypeName(typeName, args);
+    String requestTypeName = RebindingRequestGenerator.getRequestTypeName(typeName, args);
     String resultTypeName = typeNameBindingMap.get(requestTypeName);
     if (resultTypeName == null) {
       logger = Messages.TRACE_TOPLEVEL_REBIND.branch(logger, requestTypeName, null);

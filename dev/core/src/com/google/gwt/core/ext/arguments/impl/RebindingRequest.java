@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
  * Reserved for compiler magic.
  */
 @Target(ElementType.TYPE)
-public @interface GwtCreateRequest {
+public @interface RebindingRequest {
   String typeName();
   int size();
   byte[] bytes();

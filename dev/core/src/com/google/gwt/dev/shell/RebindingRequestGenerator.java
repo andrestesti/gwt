@@ -20,7 +20,7 @@ import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.arguments.JArguments;
 import com.google.gwt.core.ext.arguments.impl.ArgumentSerializer;
-import com.google.gwt.core.ext.arguments.impl.GwtCreateRequest;
+import com.google.gwt.core.ext.arguments.impl.RebindingRequest;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.dev.javac.StandardGeneratorContext;
@@ -33,7 +33,7 @@ import java.io.PrintWriter;
 /**
  * Generates an annotated type with arguments for generators.
  */
-public class GwtCreateRequestGenerator {
+public class RebindingRequestGenerator {
 
   public static void generate(TreeLogger logger, StandardGeneratorContext context, String typeName,
       String requestTypeName, JArgument[] args) throws UnableToCompleteException {
@@ -64,7 +64,7 @@ public class GwtCreateRequestGenerator {
 
       pw.println("package " + packageName + ";");
       pw.println();
-      pw.printf("@%s(\n", GwtCreateRequest.class.getCanonicalName());
+      pw.printf("@%s(\n", RebindingRequest.class.getCanonicalName());
       pw.printf("  typeName = \"%s\",\n", Generator.escape(typeName));
       pw.printf("  size = %d,\n", args.length);
       pw.print("  bytes = { ");
@@ -90,7 +90,7 @@ public class GwtCreateRequestGenerator {
 
   public static String getRequestTypeName(String typeName, JArgument[] args) {
     if (args.length > 0) {
-      return typeName + "_gwtcreaterequest_" + JArguments.getKey(args);
+      return typeName + "_rebindingrequest_" + JArguments.getKey(args);
     }
     return typeName;
   }

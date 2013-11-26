@@ -22,7 +22,7 @@ import com.google.gwt.dev.jjs.InternalCompilerException;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
 import com.google.gwt.dev.jjs.ast.AccessModifier;
-import com.google.gwt.dev.jjs.ast.RebindSignature;
+import com.google.gwt.dev.jjs.ast.JRebindingSignature;
 import com.google.gwt.dev.jjs.ast.JAbsentArrayDimension;
 import com.google.gwt.dev.jjs.ast.JArrayLength;
 import com.google.gwt.dev.jjs.ast.JArrayRef;
@@ -3209,7 +3209,7 @@ public class GwtAstBuilder {
    * Add rebind signature to a method if annotations are present. 
    * Validations are performed in {@link UnifyAst}.
    */
-  private void addRebindSignature(JMethod method, AbstractMethodDeclaration x) {
+  private void addRebindingSignature(JMethod method, AbstractMethodDeclaration x) {
     if (x.annotations == null) {
       return;
     }
@@ -3258,9 +3258,9 @@ public class GwtAstBuilder {
           }
         }
       }
-      RebindSignature signature =
-          new RebindSignature(method, typeName, typeParamIndex, ctorParamIndices);
-      method.setRebindSignature(signature);
+      JRebindingSignature signature =
+          new JRebindingSignature(method, typeName, typeParamIndex, ctorParamIndices);
+      method.setRebindingSignature(signature);
     }
   }
 
@@ -3380,7 +3380,7 @@ public class GwtAstBuilder {
     // User args.
     createParameters(method, x);
     
-    addRebindSignature(method, x);
+    addRebindingSignature(method, x);
 
     if (x.isConstructor()) {
       if (isNested) {

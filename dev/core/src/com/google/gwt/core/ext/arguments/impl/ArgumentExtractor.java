@@ -29,7 +29,7 @@ public class ArgumentExtractor {
   }
 
   public static JArgument[] getArguments(JClassType type) {
-    GwtCreateRequest annotation = type.getAnnotation(GwtCreateRequest.class);
+    RebindingRequest annotation = type.getAnnotation(RebindingRequest.class);
     if (annotation == null) {
       return new JArgument[0];
     }
@@ -48,7 +48,7 @@ public class ArgumentExtractor {
   }
 
   public static String getRequestTypeName(JClassType type) {
-    GwtCreateRequest args = type.getAnnotation(GwtCreateRequest.class);
+    RebindingRequest args = type.getAnnotation(RebindingRequest.class);
     if (args != null) {
       return args.typeName();
     }
@@ -56,6 +56,6 @@ public class ArgumentExtractor {
   }
 
   public static boolean hasArguments(JClassType type) {
-    return type.isAnnotationPresent(GwtCreateRequest.class);
+    return type.isAnnotationPresent(RebindingRequest.class);
   }
 }

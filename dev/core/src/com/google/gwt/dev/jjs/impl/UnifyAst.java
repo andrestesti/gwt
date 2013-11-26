@@ -75,7 +75,7 @@ import com.google.gwt.dev.jjs.ast.JThisRef;
 import com.google.gwt.dev.jjs.ast.JTryStatement;
 import com.google.gwt.dev.jjs.ast.JType;
 import com.google.gwt.dev.jjs.ast.JVariable;
-import com.google.gwt.dev.jjs.ast.RebindSignature;
+import com.google.gwt.dev.jjs.ast.JRebindingSignature;
 import com.google.gwt.dev.jjs.ast.js.JDebuggerStatement;
 import com.google.gwt.dev.jjs.ast.js.JsniFieldRef;
 import com.google.gwt.dev.jjs.ast.js.JsniMethodBody;
@@ -277,7 +277,7 @@ public class UnifyAst {
         // Should not have an overridden type at this point.
         assert x.getType() == target.getType();
       }
-      if (ensureRebindMethodCall(x)) {
+      if (ensureRebindingMethodCall(x)) {
         flowInto(target);
       }
     }
@@ -304,7 +304,7 @@ public class UnifyAst {
 
     @Override
     public void endVisit(JNewInstance x, Context ctx) {
-      if (ensureRebindMethodCall(x)) {
+      if (ensureRebindingMethodCall(x)) {
         flowInto(x.getTarget());
       }
       assert !x.getEnclosingType().isExternal();
@@ -374,7 +374,7 @@ public class UnifyAst {
     public boolean visit(JMethod x, Context ctx) {
       currentMethod = x;
       tempCount = 0;
-      return ensureRebindMethod(x);
+      return ensureRebindingMethod(x);
     }
 
     @Override
@@ -430,83 +430,83 @@ public class UnifyAst {
       }      
     }
 
-    private boolean ensureRebindMethod(JMethod x) {
-      Boolean validity = rebindMethodsValidity.get(x);
+    private boolean ensureRebindingMethod(JMethod x) {
+      Boolean validity = rebindingMethodsValidity.get(x);
       if (validity != null) {
         return validity;
       }
-      RebindSignature signature = x.getRebindSignature();
+      JRebindingSignature signature = x.getRebindingSignature();
       if (signature == null) {
         return true;
       }
       // Validate type params consistency
       if (signature.hasMultipleTypeParam()) {
         error(x, "Too much type parameters");
-        rebindMethodsValidity.put(x, false);
+        rebindingMethodsValidity.put(x, false);
         return false;
       }
       if (signature.getTypeName() != null) {
         if (signature.hasTypeParam()) {
           error(x, "Type parameter already defined in @Rebind annotation");
-          rebindMethodsValidity.put(x, false);
+          rebindingMethodsValidity.put(x, false);
           return false;
         }
       } else if (!signature.hasTypeParam()) {
         error(x, "Type parameter is required");
-        rebindMethodsValidity.put(x, false);
+        rebindingMethodsValidity.put(x, false);
         return false;
       }
       if (signature.getCtorParamIndices().contains(signature.getTypeParamIndex())) {
         error(x, "Type parameter can't be already a constructor parameter");
-        rebindMethodsValidity.put(x, false);
+        rebindingMethodsValidity.put(x, false);
         return false;
       }
       if (signature.hasTypeParam()) {
         JParameter typeParam = signature.getTypeParam();
         if (!"java.lang.Class".equals(typeParam.getType().getName())) {
           error(x, "Type parameter must be of type java.lang.Class");
-          rebindMethodsValidity.put(x, false);
+          rebindingMethodsValidity.put(x, false);
           return false;
         }
         if (!x.isAbstract() && !typeParam.isFinal()) {
           error(x, "Type parameter must be final in non abstract methods");
-          rebindMethodsValidity.put(x, false);
+          rebindingMethodsValidity.put(x, false);
           return false;
         }
       } else if (signature.getCtorParamIndices().isEmpty()) {
         error(x,
-            "Rebind method must have a type parameter if constructor parameters aren't present");
-        rebindMethodsValidity.put(x, false);
+            "Rebinding method must have a type parameter if constructor parameters are absent");
+        rebindingMethodsValidity.put(x, false);
         return false;
       }      
       // Validate final parameters if method is not abstract
       if (!x.isAbstract()) {
         for (int i : signature.getCtorParamIndices()) {
           if (!x.getParams().get(i).isFinal()) {
-            error(x, "Rebind constructor parameters must be final");
-            rebindMethodsValidity.put(x, false);
+            error(x, "Rebinding constructor parameters must be final");
+            rebindingMethodsValidity.put(x, false);
             return false;
           }
         }
       }
-      // Adapt method for rebind
-      JDeclaredType factoryIntf = program.getIndexedType("RebindFactory");
+      // Adapt method for rebinding
+      JDeclaredType factoryIntf = program.getIndexedType("RebindingFactory");
       assert factoryIntf != null;
       JParameter factoryParam =
           new JParameter(x.getSourceInfo(), "$factory", factoryIntf, true, false, x);
       x.addParam(factoryParam);
       signature.setFactoryParam(factoryParam);
       
-      rebindMethodsValidity.put(x, true);
+      rebindingMethodsValidity.put(x, true);
 
       return true;
     }
 
-    private boolean ensureRebindMethodCall(JMethodCall x) {
-      if (!ensureRebindMethod(x.getTarget())) {
+    private boolean ensureRebindingMethodCall(JMethodCall x) {
+      if (!ensureRebindingMethod(x.getTarget())) {
         return false;
       }
-      RebindSignature signature = x.getTarget().getRebindSignature();
+      JRebindingSignature signature = x.getTarget().getRebindingSignature();
       if (signature == null) {
         return true;
       }
@@ -543,19 +543,20 @@ public class UnifyAst {
       if (signature.hasTypeParam()) {
         JExpression typeParam = args.get(signature.getTypeParamIndex());
         if (!(typeParam instanceof JClassLiteral)) {
-          error(x, "Only class literals may be used as type arguments to rebind methods");
+          error(x, "Only class literals may be used as type arguments to rebinding methods");
           return false;
         }
         JClassLiteral classLiteral = (JClassLiteral) typeParam;
         if (!(classLiteral.getRefType() instanceof JDeclaredType)) {
-          error(x, "Only classes and interfaces may be used as type arguments to rebind methods");
+          error(x, 
+              "Only classes and interfaces may be used as type arguments to rebinding methods");
           return false;
         }
         typeName = JGwtCreate.nameOf(classLiteral.getRefType());
       } else {
         typeName = signature.getTypeName();
       }
-      JExpression factory = newRebindFactory(x, typeName, jargs, unifiedCtorArgs);
+      JExpression factory = newRebindingFactory(x, typeName, jargs, unifiedCtorArgs);
       if (factory != null) {
         x.addArg(factory);
       }
@@ -584,13 +585,13 @@ public class UnifyAst {
       } else {
         genArgs = new JArgument[0];
       }
-      RebindSignature signature = null;
+      JRebindingSignature signature = null;
       String reqType;
       if (typeArg instanceof JParameterRef) {
         JParameterRef paramRef = (JParameterRef) typeArg;
-        signature = paramRef.getParameter().getEnclosingMethod().getRebindSignature();
+        signature = paramRef.getParameter().getEnclosingMethod().getRebindingSignature();
         if (signature == null) {
-          error(x, "Only rebind type arguments may be used as first argument to GWT.create()");
+          error(x, "Only rebinding type arguments may be used as first argument to GWT.create()");
           return null;
         }
         reqType = null;
@@ -614,18 +615,18 @@ public class UnifyAst {
         JExpression a = args.get(i);
         if (a instanceof JParameterRef) {
           JParameterRef aRef = (JParameterRef) a;
-          RebindSignature aSignature =
-              aRef.getParameter().getEnclosingMethod().getRebindSignature();
+          JRebindingSignature aSignature =
+              aRef.getParameter().getEnclosingMethod().getRebindingSignature();
           if (aSignature != null) {
             if (signature == null) {
               if (i > 0) {
                 error(x,
-                    "All GWT.create constructor arguments must be rebind method constructor arguments");
+                    "GWT.create constructor arguments must be rebinding constructor arguments");
                 return null;
               }
               if (!reqType.equals(aSignature.getTypeName())) {
                 error(x,
-                    "All GWT.create type argument must be equals than rebind method type argument");
+                    "GWT.create type argument must be equals than rebinding type argument");
                 return null;
               }
               signature = aSignature;
@@ -634,29 +635,29 @@ public class UnifyAst {
             JParameter p = signature.getMethod().getParams().get(aIndex);
             if (!aRef.getParameter().equals(p)) {
               error(x,
-                  "GWT.create arguments must have the same order than rebind method arguments");
+                  "GWT.create arguments must have the same order than constructor arguments");
               return null;
             }
           } else {
             if (signature != null) {
               error(x,
-                  "All GWT.create constructor arguments must be rebind method constructor arguments");
+                  "All GWT.create constructor arguments must be rebinding constructor arguments");
               return null;
             }
           }
         } else if (signature != null) {
           error(x,
-              "All GWT.create constructor arguments must be rebind method constructor arguments");
+              "All GWT.create constructor arguments must be rebinding constructor arguments");
           return null;
         }
       }
 
       if (signature != null) {
-        // Call RebindFactory.create()
+        // Call RebindingFactory.create()
         JParameter factory = signature.getFactoryParam();
         assert factory != null;
         JParameterRef factoryRef = new JParameterRef(x.getSourceInfo(), factory);
-        JMethod create = program.getIndexedMethod("RebindFactory.create");
+        JMethod create = program.getIndexedMethod("RebindingFactory.create");
         JMethodCall createCall = new JMethodCall(x.getSourceInfo(), factoryRef, create);
         return createCall;
       }
@@ -710,7 +711,7 @@ public class UnifyAst {
       throw new InternalCompilerException("Unknown magic method");
     }
     
-    private JNewInstance newRebindFactory(JNode x, String typeName, JArgument[] jargs, 
+    private JNewInstance newRebindingFactory(JNode x, String typeName, JArgument[] jargs, 
         List<JExpression> args) {      
       SourceInfo info = x.getSourceInfo().makeChild();
 
@@ -720,12 +721,11 @@ public class UnifyAst {
 
       if (factoryCtor == null) {
         // Create a factory type
-        JInterfaceType factoryIntf = (JInterfaceType) program.getIndexedType("RebindFactory");
+        JInterfaceType factoryIntf = (JInterfaceType) program.getIndexedType("RebindingFactory");
         JClassType factoryType = new JClassType(info, factoryName, false, false);
         factoryType.setSuperClass(program.getTypeJavaLangObject());
         factoryType.addImplements(factoryIntf);
-        // factoryType.setFinal();
-
+        
         JMethod clinit =
             new JMethod(x.getSourceInfo(), "$clinit", factoryType, JPrimitiveType.VOID, false,
                 true, true, AccessModifier.PRIVATE);
@@ -764,9 +764,8 @@ public class UnifyAst {
         }
         factoryCtor.freezeParamTypes();
         factoryType.addMethod(factoryCtor);
-        // factoryCtor.setSynthetic();
 
-        // Make RebindFactory.create() call
+        // Make RebindingFactory.create() call
         JMethod createMethod =
             new JMethod(info, "create", factoryType, program.getTypeJavaLangObject(), false, false,
                 false, AccessModifier.PUBLIC);
@@ -785,6 +784,10 @@ public class UnifyAst {
 
         // add this new class
         program.addType(factoryType);
+        
+        // Constructor must be explicitly flowInto()
+        flowInto(factoryCtor);
+        
         instantiate(factoryType);
 
         factoryCtors.put(factoryName, factoryCtor);
@@ -880,7 +883,7 @@ public class UnifyAst {
   private final CompilerContext compilerContext;
   private final Set<JMethod> magicMethodCalls = new IdentityHashSet<JMethod>();
   private final Set<JMethod> gwtDebuggerMethods = new IdentityHashSet<JMethod>();
-  private final Map<JMethod, Boolean> rebindMethodsValidity = new HashMap<JMethod, Boolean>();
+  private final Map<JMethod, Boolean> rebindingMethodsValidity = new HashMap<JMethod, Boolean>();
   private final Map<String, JConstructor> factoryCtors = new HashMap<String, JConstructor>();
   private final Map<String, JMethod> methodMap = new HashMap<String, JMethod>();
   private final JJSOptions options;
@@ -1121,7 +1124,7 @@ public class UnifyAst {
           for (JMethod upref : collected.get(method.getSignature())) {
             if (canAccessSuperMethod(type, upref)) {
               if (!method.hasIsomorphicRebindSignature(upref)) {
-                error(method, "Overriding method must complain the rebind method signature");
+                error(method, "Overriding method must complain the rebinding method signature");
                 return;
               }
               method.addOverride(upref);
