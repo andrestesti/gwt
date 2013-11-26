@@ -48,7 +48,7 @@ public class MainWidget extends Composite {
       Window.alert("Please, enter your name");
     } else {
       /*
-       * The StringFormatterGenerator process the format String in compile time.
+       * The StringFormatterGenerator processes the format String in compile time.
        * See the generated files.
        */
       String message = 
