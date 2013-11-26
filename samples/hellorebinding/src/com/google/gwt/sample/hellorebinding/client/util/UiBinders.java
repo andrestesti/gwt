@@ -20,8 +20,8 @@ import com.google.gwt.core.shared.Rebind;
 import com.google.gwt.uibinder.client.UiBinder;
 
 /**
- * Class with utility methods to bind user interfaces instances without 
- * subclassing {@link UiBinder}.
+ * Class with utility methods to bind user interfaces instances without subclassing 
+ * {@link UiBinder}.
  */
 public class UiBinders {
   
@@ -32,17 +32,19 @@ public class UiBinders {
    * Creates and returns the root object of the UI, and fills any fields of owner
    * tagged with {@link UiField}.
    *
-   * @param rootType the type of the root object of the generated UI, typically a
-   *        subclass of {@link com.google.gwt.dom.client.Element Element} or
-   *        {@link com.google.gwt.user.client.ui.UIObject UiObject}
-   * @param ownerType the type of the object that will own the generated UI
-   * @param owner the object whose {@link com.google.gwt.uibinder.client.UiField UiField}
-   *              needs will be filled
+   * @param rootTypeLiteral  literal of the type of the root object of the generated UI, typically 
+   *                         a subclass of {@link com.google.gwt.dom.client.Element Element} or
+   *                         {@link com.google.gwt.user.client.ui.UIObject UiObject}
+   * @param ownerTypeLiteral literal of the type of the object that will own the generated UI
+   * @param owner            the object whose 
+   *                         {@link com.google.gwt.uibinder.client.UiField UiField} needs will be
+   *                         filled
    */
   @Rebind(type = UiBinderCreator.class)
-  public static <U, O> U createAndBindUi(@Rebind.Param final Class<U> rootType,
-      @Rebind.Param final Class<O> ownerType, O owner) {
-    UiBinderCreator<U, O> creator = GWT.create(UiBinderCreator.class, rootType, ownerType);
+  public static <U, O> U createAndBindUi(@Rebind.Param final Class<U> rootTypeLiteral,
+      @Rebind.Param final Class<O> ownerTypeLiteral, O owner) {
+    UiBinderCreator<U, O> creator =
+        GWT.create(UiBinderCreator.class, rootTypeLiteral, ownerTypeLiteral);
     UiBinder<U, O> uiBinder = creator.createUiBinder();
     return uiBinder.createAndBindUi(owner);
   }
@@ -51,18 +53,19 @@ public class UiBinders {
    * Creates and returns the root object of the UI, and fills any fields of owner
    * tagged with {@link UiField}.
    *
-   * @param rootType the type of the root object of the generated UI, typically a
-   *        subclass of {@link com.google.gwt.dom.client.Element Element} or
-   *        {@link com.google.gwt.user.client.ui.UIObject UiObject}
-   * @param ownerType the type of the object that will own the generated UI
-   * @param template the template file
-   * @param owner the object whose {@literal @}UiField needs will be filled
+   * @param rootTypeLiteral  literal of the type of the root object of the generated UI, typically
+   *                         a subclass of {@link com.google.gwt.dom.client.Element Element} or
+   *                         {@link com.google.gwt.user.client.ui.UIObject UiObject}
+   * @param ownerTypeLiteral literal of the type of the object that will own the generated UI
+   * @param templateLiteral  literal of the template file
+   * @param owner            the object whose {@literal @}UiField needs will be filled
    */
   @Rebind(type = UiBinderCreator.class)
-  public static <U, O> U createAndBindUi(@Rebind.Param final Class<U> rootType,
-      @Rebind.Param final Class<O> ownerType, @Rebind.Param final String template, O owner) {
-    UiBinderCreator<U, O> creator = 
-        GWT.create(UiBinderCreator.class, rootType, ownerType, template);
+  public static <U, O> U createAndBindUi(@Rebind.Param final Class<U> rootTypeLiteral,
+      @Rebind.Param final Class<O> ownerTypeLiteral, @Rebind.Param final String templateLiteral,
+      O owner) {
+    UiBinderCreator<U, O> creator =
+        GWT.create(UiBinderCreator.class, rootTypeLiteral, ownerTypeLiteral, templateLiteral);
     UiBinder<U, O> uiBinder = creator.createUiBinder();
     return uiBinder.createAndBindUi(owner);
   }

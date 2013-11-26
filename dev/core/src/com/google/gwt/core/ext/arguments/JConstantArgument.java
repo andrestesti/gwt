@@ -23,7 +23,7 @@ public abstract class JConstantArgument extends JArgument {
   }
   
   @Override
-  public boolean hasOpaqueReferences() {
+  public boolean hasOpaqueComponents() {
     return false;
   }
 }

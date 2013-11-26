@@ -20,5 +20,5 @@ public abstract class JArgument {
   JArgument() {
   }
   
-  public abstract boolean hasOpaqueReferences();
+  public abstract boolean hasOpaqueComponents();
 }
