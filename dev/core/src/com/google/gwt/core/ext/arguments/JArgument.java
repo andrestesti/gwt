@@ -20,5 +20,5 @@ public abstract class JArgument {
   JArgument() {
   }
   
-  public abstract boolean hasOpaqueComponents();
+  public abstract boolean hasOpacity();
 }

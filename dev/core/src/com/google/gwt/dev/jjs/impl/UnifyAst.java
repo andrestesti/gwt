@@ -523,7 +523,7 @@ public class UnifyAst {
       for (int i = 0; i < jargs.length; i++) {
         JExpression exp = ctorArgs.get(i);
         JExpression a;
-        if (jargs[i].hasOpaqueComponents()) {
+        if (jargs[i].hasOpacity()) {
           assert currentMethod.getBody() instanceof JMethodBody;
           JMethodBody body = (JMethodBody) currentMethod.getBody();
           String tempName = "$temp" + tempCount++;
@@ -740,7 +740,7 @@ public class UnifyAst {
         factoryCtor.setBody(ctorBody);
         for (int i = 0; i < args.size(); i++) {
           JExpression exp = args.get(i);
-          if (jargs[i].hasOpaqueComponents()) {
+          if (jargs[i].hasOpacity()) {
             String paramName = "_a" + i;
             JType paramType = exp.getType();
             JParameter param =
@@ -795,7 +795,7 @@ public class UnifyAst {
 
       ArrayList<JExpression> factoryArgs = new ArrayList<JExpression>();
       for (int i = 0; i < jargs.length; i++) {
-        if (jargs[i].hasOpaqueComponents()) { 
+        if (jargs[i].hasOpacity()) { 
           factoryArgs.add(args.get(i));
         }
       }

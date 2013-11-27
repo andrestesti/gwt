@@ -35,9 +35,9 @@ public class JArrayArgument extends JConstantArgument {
   }
   
   @Override
-  public boolean hasOpaqueComponents() {
+  public boolean hasOpacity() {
     for (JArgument e : elements) {
-      if (e.hasOpaqueComponents()) {
+      if (e.hasOpacity()) {
         return true;
       }
     }

@@ -30,7 +30,7 @@ public class JOpaqueArgument extends JArgument {
   }
   
   @Override
-  public boolean hasOpaqueComponents() {
+  public boolean hasOpacity() {
     return true;
   }
 }
