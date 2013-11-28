@@ -20,7 +20,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to define rebind methods.
+ * Annotation to define rebinding methods.
  */
 @Target({ElementType.CONSTRUCTOR, ElementType.METHOD})
 @Documented
@@ -41,14 +41,14 @@ public @interface Rebind {
   Class<?> type() default ByParameter.class;
 
   /**
-   * Annotation to define rebind type parameters.
+   * Annotation to define rebinding type parameters.
    */
   @Target({ElementType.PARAMETER})
   @interface Type {
   }
 
   /**
-   * Annotation to define rebind constructor parameters.
+   * Annotation to define rebinding constructor parameters.
    */
   @Target({ElementType.PARAMETER})
   @interface Param {
