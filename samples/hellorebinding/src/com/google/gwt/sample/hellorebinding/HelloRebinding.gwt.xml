@@ -23,6 +23,10 @@
     <when-type-assignable class="com.google.gwt.sample.hellorebinding.client.util.StringFormatter" />
   </generate-with>
   
+  <generate-with class="com.google.gwt.sample.hellorebinding.rebind.JsniSnippetGenerator">
+    <when-type-assignable class="com.google.gwt.sample.hellorebinding.client.util.JsniSnippet" />
+  </generate-with>
+    
   <entry-point class="com.google.gwt.sample.hellorebinding.client.HelloRebinding"/>
 
   <!-- allow Super Dev Mode -->

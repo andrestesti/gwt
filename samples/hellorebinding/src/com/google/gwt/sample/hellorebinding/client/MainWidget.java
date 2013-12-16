@@ -16,6 +16,7 @@
 package com.google.gwt.sample.hellorebinding.client;
 
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.sample.hellorebinding.client.util.JsniUtil;
 import com.google.gwt.sample.hellorebinding.client.util.Strings;
 import com.google.gwt.sample.hellorebinding.client.util.UiBinders;
 import com.google.gwt.uibinder.client.UiField;
@@ -40,7 +41,7 @@ public class MainWidget extends Composite {
   }
   
   @UiField
-  TextBox name;
+  TextBox name;  
   
   @UiHandler("sayHello")
   void clickSayHello(ClickEvent e) {
@@ -53,7 +54,14 @@ public class MainWidget extends Composite {
        */
       String message = 
           Strings.format("Hello %s, you are welcome to %s app.", name.getValue(), APP_NAME);
-      Window.alert(message);
+      alert(message);
     }
+  }
+  
+  private void alert(String message) {
+    /**
+     * Easy definition of JSNI snippets.
+     */
+    JsniUtil.jsni("$wnd.alert(#)", message);
   }
 }
