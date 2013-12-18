@@ -18,5 +18,10 @@ package com.google.gwt.sample.hellorebinding.client.util;
 /**
  * JSNI snippet for exclusive use of generators.
  */
-public interface JsniSnippet {
+public interface JsniSnippet0 extends JsniSnippet {
+  
+  /**
+   * Returns the result of the JSNI execution.
+   */
+  <T> T execute();
 }

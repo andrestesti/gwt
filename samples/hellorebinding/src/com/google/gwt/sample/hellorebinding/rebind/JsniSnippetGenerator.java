@@ -22,6 +22,8 @@ import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.arguments.JArgument;
 import com.google.gwt.core.ext.arguments.JArguments;
 import com.google.gwt.core.ext.arguments.JStringArgument;
+import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.sample.hellorebinding.client.util.JsniSnippet;
 
 import java.io.PrintWriter;
@@ -30,11 +32,27 @@ import java.io.PrintWriter;
  * Generates {@link JsniSnippet} implementations depending on {@link JArgument}s.
  */
 public class JsniSnippetGenerator extends ParameterizedGenerator {
+  
+  private int argumentsCount(JClassType type) {
+    for(JMethod m: type.getMethods()) {
+      if(m.getName().equals("execute")) {
+        return m.getParameters().length;
+      }
+    }
+    return -1;
+  }
 
   @Override
   public String generate(TreeLogger logger, GeneratorContext context, String typeName,
       JArgument[] arguments) throws UnableToCompleteException {
-
+    
+    JClassType snippetType = context.getTypeOracle().findType(typeName);
+    
+    if(snippetType == null) {
+      logger.log(TreeLogger.ERROR, "Rebinding type not found");
+      throw new UnableToCompleteException();
+    }
+    
     if (arguments.length < 1) {
       logger.log(TreeLogger.ERROR, "Missing JSNI literal argument");
       throw new UnableToCompleteException();
@@ -49,33 +67,58 @@ public class JsniSnippetGenerator extends ParameterizedGenerator {
 
     String argumentsKey = JArguments.getKey(arguments);
 
-    String packageName = JsniSnippet.class.getPackage().getName();
-    String snippetTypeName = JsniSnippet.class.getSimpleName() + "_impl_" + argumentsKey;
+    String packageName = snippetType.getPackage().getName();
+    String snippetTypeName = snippetType.getSimpleSourceName() + "_impl_" + argumentsKey;
     String qualifiedSnippetTypeName = packageName + "." + snippetTypeName;
 
     PrintWriter pw = context.tryCreate(logger, packageName, snippetTypeName);
 
-    if (pw != null) {
-      pw.printf("package %s;\n\n", packageName);
-      pw.printf("public class %s implements JsniSnippet {\n\n", snippetTypeName);
-      pw.printf("  public %s(String jsniLiteral) {}\n", snippetTypeName);
-      pw.println();
+    if (pw != null) {      
+
+      int argCount = argumentsCount(snippetType);
       
-      pw.printf("  @Override public native <T> T execute(Object[] args) /*-{\n");
+      if(argCount < 0) {
+        logger.log(TreeLogger.ERROR, "execute() method not found");
+        throw new UnableToCompleteException();      
+      }      
 
       String jsniTemplate = ((JStringArgument) arg0).getValue();
       String[] parts = jsniTemplate.split("#", -1);
       
+      if(parts.length != (argCount + 1)) {
+        logger.log(TreeLogger.ERROR, "wrong number of snippet arguments");
+        throw new UnableToCompleteException();        
+      }
+      
+      pw.printf("package %s;\n\n", packageName);
+      pw.printf("public class %s implements %s {\n\n", snippetTypeName, snippetType
+          .getSimpleSourceName());
+      pw.printf("  public %s(String jsniLiteral) {}\n", snippetTypeName);
+      pw.println();
+      
+      pw.print("  @Override public native <T> T execute(");
+      
+      boolean hasSeparator = false;
+      
+      for(int i = 0; i < argCount; i++) {
+        if(hasSeparator) {
+          pw.print(", ");
+        } else {
+          hasSeparator = true;
+        }
+        pw.printf("Object a%d", i);
+      }
+      
+      pw.println(") /*-{");      
       pw.print("    return ");
 
-      if (parts.length < 2) {
-        pw.print(parts[0]);
+      if (argCount == 0) {
+        pw.print(jsniTemplate);
       } else {
-        int top = parts.length -1;
-        for(int i = 0; i < top; i++) {
-          pw.printf("%sargs[%d]", parts[i], i);
+        for(int i = 0; i < argCount; i++) {
+          pw.printf("%sa%d", parts[i], i);
         }
-        pw.print(parts[top]);
+        pw.print(parts[argCount]);
       }
       pw.println(";");
       
