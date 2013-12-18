@@ -21,13 +21,13 @@ import com.google.gwt.sample.hellorebinding.client.util.Strings;
 import com.google.gwt.sample.hellorebinding.client.util.UiBinders;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Main view.
+ * This class contains examples of rebinding methods invocations.
  */
 public class MainWidget extends Composite {
   
@@ -46,7 +46,7 @@ public class MainWidget extends Composite {
   @UiHandler("sayHello")
   void clickSayHello(ClickEvent e) {
     if (name.getValue().isEmpty()) {
-      Window.alert("Please, enter your name");
+      alert("Please, enter your name");
     } else {
       /*
        * The StringFormatterGenerator processes the format String in compile time.
