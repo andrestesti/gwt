@@ -122,7 +122,7 @@ public class ResourceOracleImpl implements ResourceOracle {
     }
 
     public boolean isPreferredOver(ResourceDescription that) {
-      return this.compareTo(that) >= 0;
+      return this.compareTo(that) > 0;
     }
 
     @Override
