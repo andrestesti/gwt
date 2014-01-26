@@ -74,6 +74,7 @@ class DistillerRebindPermutationOracle implements RebindPermutationOracle {
     }
   }
 
+  @Override
   public void clear() {
     generatorContext.clear();
     compilationState = null;
@@ -86,6 +87,7 @@ class DistillerRebindPermutationOracle implements RebindPermutationOracle {
     return getAllPossibleRebindAnswers(logger, sourceTypeName, new JArgument[0]);
   }
 
+  @Override
   public String[] getAllPossibleRebindAnswers(TreeLogger logger,
       String requestTypeName, JArgument[] args) throws UnableToCompleteException {
 
@@ -107,10 +109,12 @@ class DistillerRebindPermutationOracle implements RebindPermutationOracle {
     return result;
   }
 
+  @Override
   public CompilationState getCompilationState() {
     return compilationState;
   }
 
+  @Override
   public StandardGeneratorContext getGeneratorContext() {
     return generatorContext;
   }

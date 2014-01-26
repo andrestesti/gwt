@@ -163,6 +163,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     getIsolatedClassLoader().clear();
   }
 
+  @Override
   public void exceptionCaught(Object exception) {
     Throwable caught;
     Throwable thrown = sThrownJavaExceptionObject.get();
@@ -196,6 +197,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return moduleName;
   }
 
+  @Override
   public boolean invokeNativeBoolean(String name, Object jthis,
       Class<?>[] types, Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -209,6 +211,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.booleanValue();
   }
 
+  @Override
   public byte invokeNativeByte(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -221,6 +224,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.byteValue();
   }
 
+  @Override
   public char invokeNativeChar(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -233,6 +237,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.charValue();
   }
 
+  @Override
   public double invokeNativeDouble(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -245,6 +250,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.doubleValue();
   }
 
+  @Override
   public float invokeNativeFloat(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -257,6 +263,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.floatValue();
   }
 
+  @Override
   public int invokeNativeInt(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -269,6 +276,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.intValue();
   }
 
+  @Override
   public long invokeNativeLong(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -281,6 +289,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.longValue();
   }
 
+  @Override
   public Object invokeNativeObject(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -289,6 +298,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
         msgPrefix);
   }
 
+  @Override
   public short invokeNativeShort(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -301,6 +311,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
     return value.shortValue();
   }
 
+  @Override
   public void invokeNativeVoid(String name, Object jthis, Class<?>[] types,
       Object[] args) throws Throwable {
     JsValue result = invokeNative(name, jthis, types, args);
@@ -319,6 +330,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
   /**
    * Allows client-side code to log to the tree logger.
    */
+  @Override
   public void log(String message, Throwable e) {
     TreeLogger.Type type = TreeLogger.INFO;
     if (e != null) {
@@ -458,8 +470,9 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
    * @deprecated use {@link ModuleSpace#rebindAndCreate(String, Object[])}.
    */
   @Deprecated
-  public <T> T rebindAndCreate(String requestedClassName)
-      throws UnableToCompleteException {
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T> T rebindAndCreate(String requestedClassName) throws UnableToCompleteException {
     return rebindAndCreate(requestedClassName, new Object[0]);
   }
   

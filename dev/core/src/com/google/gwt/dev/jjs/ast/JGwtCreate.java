@@ -135,6 +135,7 @@ public class JGwtCreate extends JExpression {
     return sourceType;
   }
 
+  @Override
   public JType getType() {
     return type;
   }
@@ -153,6 +154,7 @@ public class JGwtCreate extends JExpression {
     type = newType;
   }
 
+  @Override
   public void traverse(JVisitor visitor, Context ctx) {
     if (visitor.visit(this, ctx)) {
       visitor.accept(instantiationExpressions);

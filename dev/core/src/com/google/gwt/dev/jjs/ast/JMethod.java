@@ -226,10 +226,12 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return body;
   }
   
+  @Override
   public JDeclaredType getEnclosingType() {
     return enclosingType;
   }
 
+  @Override
   public String getName() {
     return name;
   }
@@ -283,6 +285,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return thrownExceptions;
   }
 
+  @Override
   public JType getType() {
     return returnType;
   }
@@ -328,6 +331,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return true;
   }
 
+  @Override
   public boolean isAbstract() {
     return isAbstract;
   }
@@ -344,10 +348,12 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return getEnclosingType() != null && getEnclosingType().isExternal();
   }
 
+  @Override
   public boolean isFinal() {
     return isFinal;
   }
 
+  @Override
   public boolean isNative() {
     if (body == null) {
       return false;
@@ -360,6 +366,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     return access == AccessModifier.PRIVATE.ordinal();
   }
 
+  @Override
   public boolean isStatic() {
     return isStatic;
   }
@@ -415,6 +422,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     }
   }
 
+  @Override
   public void setFinal() {
     isFinal = true;
   }
@@ -461,6 +469,7 @@ public class JMethod extends JNode implements HasEnclosingType, HasName, HasType
     returnType = newType;
   }
 
+  @Override
   public void traverse(JVisitor visitor, Context ctx) {
     String before = null;
     before = traceBefore(visitor);

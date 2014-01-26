@@ -682,6 +682,7 @@ public class UnifyAst {
           searchForTypeByBinary(ref.className());
         }
         node = JsniRefLookup.findJsniRefTarget(ref, program, new JsniRefLookup.ErrorReporter() {
+          @Override
           public void reportError(String errMsg) {
             error(x, errMsg);
           }
