@@ -81,10 +81,9 @@ public class GWTRunner implements EntryPoint {
      */
     @Override
     public void onFailure(Throwable caught) {
-      if (maxRetryCount < 0 || curRetryCount < maxRetryCount) {
+      if (curRetryCount++ < MAX_RETRY_COUNT) {
         reportWarning("Retrying syncing back to junit backend. (Exception: " + caught + ")");
         // Try the call again
-        curRetryCount++;
         new Timer() {
           @Override
           public void run() {
@@ -122,20 +121,9 @@ public class GWTRunner implements EntryPoint {
   private static final String SESSIONID_QUERY_PARAM = "gwt.junit.sessionId";
 
   /**
-   * A query param specifying the test class to run, for serverless mode.
+   * The maximum number of times to retry communication with the server per test batch.
    */
-  private static final String TESTCLASS_QUERY_PARAM = "gwt.junit.testclassname";
-
-  /**
-   * A query param specifying the test method to run, for serverless mode.
-   */
-  private static final String TESTFUNC_QUERY_PARAM = "gwt.junit.testfuncname";
-
-  /**
-   * A query param specifying the number of times to retry if the server fails
-   * to respond.
-   */
-  private static final String RETRYCOUNT_QUERY_PARAM = "gwt.junit.retrycount";
+  private static final int MAX_RETRY_COUNT = 3;
 
   /**
    * A query param specifying the block index to start on.
@@ -186,17 +174,6 @@ public class GWTRunner implements EntryPoint {
    */
   private final TestBlockListener testBlockListener = new TestBlockListener();
 
-  /**
-   * The maximum number of times to retry communication with the server per
-   * test batch.
-   */
-  private int maxRetryCount;
-
-  /**
-   * If true, run a single test case with no RPC.
-   */
-  private boolean serverless = false;
-
   private GWTTestAccessor testAccessor;
 
   // TODO(FINDBUGS): can this be a private constructor to avoid multiple
@@ -217,21 +194,9 @@ public class GWTRunner implements EntryPoint {
   public void onModuleLoad() {
     testAccessor = new GWTTestAccessor();
     clientInfo = new ClientInfo(parseQueryParamInteger(SESSIONID_QUERY_PARAM, -1), getUserAgent());
-    maxRetryCount = parseQueryParamInteger(RETRYCOUNT_QUERY_PARAM, 3);
-    currentBlock = checkForQueryParamTestToRun();
-    if (currentBlock != null) {
-      /*
-       * Just run a single test with no server-side interaction.
-       */
-      serverless = true;
-      runTest();
-    } else {
-      /*
-       * Normal operation: Kick off the test running process by getting the
-       * first method to run from the server.
-       */
-      syncToServer();
-    }
+
+    // Kick off the test running process by getting the first method to run from the server.
+    syncToServer();
   }
 
   private String getUserAgent() {
@@ -240,10 +205,6 @@ public class GWTRunner implements EntryPoint {
   }
 
   public void reportResultsAndGetNextMethod(JUnitResult result) {
-    if (serverless) {
-      // That's it, we're done
-      return;
-    }
     if (failureMessage != null) {
       RuntimeException ex = new RuntimeException(failureMessage);
       result.setException(ex);
@@ -270,18 +231,6 @@ public class GWTRunner implements EntryPoint {
   public void executeTestMethod(GWTTestCase testCase, String className, String methodName)
       throws Throwable {
     testAccessor.invoke(testCase, className, methodName);
-  }
-
-  private TestBlock checkForQueryParamTestToRun() {
-    String testClass = Window.Location.getParameter(TESTCLASS_QUERY_PARAM);
-    String testMethod = Window.Location.getParameter(TESTFUNC_QUERY_PARAM);
-    if (testClass == null || testMethod == null) {
-      return null;
-    }
-    // TODO: support blocks of tests?
-    TestInfo[] tests = new TestInfo[] {new TestInfo(GWT.getModuleName(),
-        testClass, testMethod)};
-    return new TestBlock(tests, 0);
   }
 
   private void doRunTest() {

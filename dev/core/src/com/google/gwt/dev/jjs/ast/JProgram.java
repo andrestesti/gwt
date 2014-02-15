@@ -19,7 +19,6 @@ import com.google.gwt.dev.jjs.Correlation.Literal;
 import com.google.gwt.dev.jjs.InternalCompilerException;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.SourceOrigin;
-import com.google.gwt.dev.jjs.ast.js.JsCastMap;
 import com.google.gwt.dev.jjs.impl.codesplitter.FragmentPartitioningResult;
 import com.google.gwt.dev.util.log.speedtracer.CompilerEventType;
 import com.google.gwt.dev.util.log.speedtracer.SpeedTracerLogger;
@@ -279,7 +278,7 @@ public class JProgram extends JNode {
 
   private final Map<JType, JArrayType> arrayTypes = Maps.newHashMap();
 
-  private Map<JReferenceType, JsCastMap> castMaps;
+  private Map<JReferenceType, JCastMap> castMaps;
 
   private BiMap<JType, JField> classLiteralFieldsByType;
 
@@ -302,7 +301,7 @@ public class JProgram extends JNode {
 
   private final Map<JMethod, JMethod> instanceToStaticMap = Maps.newIdentityHashMap();
 
-  private String propertyProviderRegistratorTypeName;
+  private String propertyProviderRegistratorTypeSourceName;
 
   // wrap up .add here, and filter out forced source
   private Set<String> referenceOnlyTypeNames = Sets.newHashSet();
@@ -630,7 +629,11 @@ public class JProgram extends JNode {
     return result;
   }
 
-  public JsCastMap getCastMap(JReferenceType referenceType) {
+  public Collection<JCastMap> getCastMaps() {
+    return Collections.unmodifiableCollection(castMaps.values());
+  }
+
+  public JCastMap getCastMap(JReferenceType referenceType) {
     // ensure jsonCastableTypeMaps has been initialized
     // it might not have been if the CastNormalizer has not been run
     if (castMaps == null) {
@@ -779,18 +782,8 @@ public class JProgram extends JNode {
     return JMethod.NULL_METHOD;
   }
 
-  public int getQueryId(JReferenceType elementType) {
-    assert (elementType == elementType.getUnderlyingType());
-    Integer integer = queryIdsByType.get(elementType);
-    if (integer == null) {
-      return 0;
-    }
-
-    return integer.intValue();
-  }
-
-  public String getPropertyProviderRegistratorTypeName() {
-    return propertyProviderRegistratorTypeName;
+  public String getPropertyProviderRegistratorTypeSourceName() {
+    return propertyProviderRegistratorTypeSourceName;
   }
 
   public List<JRunAsync> getRunAsyncs() {
@@ -801,12 +794,14 @@ public class JProgram extends JNode {
     return fragmentPartitioninResult.getCommonAncestorFragmentId(thisFragmentId, thatFragmentId);
   }
 
-  public String getRuntimeRebindRegistratorTypeName() {
+  public String getRuntimeRebindRegistratorTypeSourceName() {
     return runtimeRebindRegistratorTypeName;
   }
 
   public JMethod getStaticImpl(JMethod method) {
-    return instanceToStaticMap.get(method);
+    JMethod staticImpl = instanceToStaticMap.get(method);
+    assert staticImpl == null || staticImpl.getEnclosingType().getMethods().contains(staticImpl);
+    return staticImpl;
   }
 
   public JArrayType getTypeArray(JType elementType) {
@@ -926,8 +921,8 @@ public class JProgram extends JNode {
     return JPrimitiveType.VOID;
   }
 
-  public void initTypeInfo(Map<JReferenceType, JsCastMap> instantiatedCastableTypesMap) {
-    castMaps = instantiatedCastableTypesMap;
+  public void initTypeInfo(Map<JReferenceType, JCastMap> castMapForType) {
+    castMaps = castMapForType;
     if (castMaps == null) {
       castMaps = Maps.newIdentityHashMap();
     }
@@ -974,12 +969,6 @@ public class JProgram extends JNode {
     this.typesByClassLiteralField = classLiteralFieldsByType.inverse();
   }
 
-  public void recordQueryIds(Map<JReferenceType, Integer> queryIdsByType,
-      List<JReferenceType> typesByQueryId) {
-    this.queryIdsByType = queryIdsByType;
-    this.typesByQueryId = typesByQueryId;
-  }
-
   public void removeStaticImplMapping(JMethod staticImpl) {
     JMethod instanceMethod = staticToInstanceMap.remove(staticImpl);
     if (instanceMethod != null) {
@@ -1014,8 +1003,9 @@ public class JProgram extends JNode {
     this.initialAsyncSequence = initialAsyncSequence;
   }
 
-  public void setPropertyProviderRegistratorTypeName(String propertyProviderRegistratorTypeName) {
-    this.propertyProviderRegistratorTypeName = propertyProviderRegistratorTypeName;
+  public void setPropertyProviderRegistratorTypeSourceName(
+      String propertyProviderRegistratorTypeSourceName) {
+    this.propertyProviderRegistratorTypeSourceName = propertyProviderRegistratorTypeSourceName;
   }
 
   public void setRuntimeRebindRegistratorTypeName(String runtimeRebindRegistratorTypeName) {
@@ -1023,11 +1013,10 @@ public class JProgram extends JNode {
   }
 
   /**
-   * If <code>method</code> is a static impl method, returns the instance method
-   * that <code>method</code> is the implementation of. Otherwise, returns
-   * <code>null</code>.
+   * If {@code method} is a static impl method, returns the instance method
+   * that {@code method} is the implementation of. Otherwise, returns{@code null}.
    */
-  public JMethod staticImplFor(JMethod method) {
+  public JMethod instanceMethodForStaticImpl(JMethod method) {
     return staticToInstanceMap.get(method);
   }
 

@@ -164,8 +164,8 @@ public class LibraryJavaToJavaScriptCompiler extends JavaToJavaScriptCompiler {
 
     // VisibleForTesting
     protected JDeclaredType ensureFullTypeLoaded(JDeclaredType type) {
-      String resourceLocation = LibraryGroupUnitCache.typeNameToResourceLocation(type.getName());
-      CompilationUnit compilationUnit = compilerContext.getUnitCache().find(resourceLocation);
+      String resourcePath = LibraryGroupUnitCache.typeSourceNameToResourcePath(type.getName());
+      CompilationUnit compilationUnit = compilerContext.getUnitCache().find(resourcePath);
       type = compilationUnit.getTypeByName(type.getName());
       return type;
     }
@@ -254,7 +254,7 @@ public class LibraryJavaToJavaScriptCompiler extends JavaToJavaScriptCompiler {
       boolean fixedPoint;
       do {
         compilerContext.getLibraryWriter()
-            .setReboundTypeNames(getTypeNames(gatherReboundTypes(rpo)));
+            .setReboundTypeSourceNames(getTypeNames(gatherReboundTypes(rpo)));
 
         fixedPoint = runGenerators();
       } while (!fixedPoint);
@@ -306,7 +306,7 @@ public class LibraryJavaToJavaScriptCompiler extends JavaToJavaScriptCompiler {
       // Ensures that JProgram knows to index this class's methods so that later bootstrap
       // construction code is able to locate the FooPropertyProviderRegistrator.register() function.
       jprogram.addIndexedTypeName(propertyProviderRegistratorTypeName);
-      jprogram.setPropertyProviderRegistratorTypeName(propertyProviderRegistratorTypeName);
+      jprogram.setPropertyProviderRegistratorTypeSourceName(propertyProviderRegistratorTypeName);
       generatorContext.finish(logger);
     }
 
