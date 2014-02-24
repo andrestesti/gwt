@@ -32,10 +32,10 @@ import java.io.PrintWriter;
  * Generates {@link JsniSnippet} implementations depending on {@link JArgument}s.
  */
 public class JsniSnippetGenerator extends ParameterizedGenerator {
-  
+
   private int argumentsCount(JClassType type) {
-    for(JMethod m: type.getMethods()) {
-      if(m.getName().equals("execute")) {
+    for (JMethod m : type.getMethods()) {
+      if (m.getName().equals("execute")) {
         return m.getParameters().length;
       }
     }
@@ -45,21 +45,21 @@ public class JsniSnippetGenerator extends ParameterizedGenerator {
   @Override
   public String generate(TreeLogger logger, GeneratorContext context, String typeName,
       JArgument[] arguments) throws UnableToCompleteException {
-    
+
     JClassType snippetType = context.getTypeOracle().findType(typeName);
-    
-    if(snippetType == null) {
+
+    if (snippetType == null) {
       logger.log(TreeLogger.ERROR, "Rebinding type not found");
       throw new UnableToCompleteException();
     }
-    
+
     if (arguments.length < 1) {
       logger.log(TreeLogger.ERROR, "Missing JSNI literal argument");
       throw new UnableToCompleteException();
     }
 
     JArgument arg0 = arguments[0];
-    
+
     if (!(arg0 instanceof JStringArgument)) {
       logger.log(TreeLogger.ERROR, "JSNI literal argument must be a String literal");
       throw new UnableToCompleteException();
@@ -73,55 +73,55 @@ public class JsniSnippetGenerator extends ParameterizedGenerator {
 
     PrintWriter pw = context.tryCreate(logger, packageName, snippetTypeName);
 
-    if (pw != null) {      
+    if (pw != null) {
 
       int argCount = argumentsCount(snippetType);
-      
-      if(argCount < 0) {
+
+      if (argCount < 0) {
         logger.log(TreeLogger.ERROR, "execute() method not found");
-        throw new UnableToCompleteException();      
-      }      
+        throw new UnableToCompleteException();
+      }
 
       String jsniTemplate = ((JStringArgument) arg0).getValue();
       String[] parts = jsniTemplate.split("#", -1);
-      
-      if(parts.length != (argCount + 1)) {
+
+      if (parts.length != (argCount + 1)) {
         logger.log(TreeLogger.ERROR, "wrong number of snippet arguments");
-        throw new UnableToCompleteException();        
+        throw new UnableToCompleteException();
       }
-      
+
       pw.printf("package %s;\n\n", packageName);
       pw.printf("public class %s implements %s {\n\n", snippetTypeName, snippetType
           .getSimpleSourceName());
       pw.printf("  public %s(String jsniLiteral) {}\n", snippetTypeName);
       pw.println();
-      
+
       pw.print("  @Override public native <T> T execute(");
-      
+
       boolean hasSeparator = false;
-      
-      for(int i = 0; i < argCount; i++) {
-        if(hasSeparator) {
+
+      for (int i = 0; i < argCount; i++) {
+        if (hasSeparator) {
           pw.print(", ");
         } else {
           hasSeparator = true;
         }
         pw.printf("Object a%d", i);
       }
-      
-      pw.println(") /*-{");      
+
+      pw.println(") /*-{");
       pw.print("    return ");
 
       if (argCount == 0) {
         pw.print(jsniTemplate);
       } else {
-        for(int i = 0; i < argCount; i++) {
+        for (int i = 0; i < argCount; i++) {
           pw.printf("%sa%d", parts[i], i);
         }
         pw.print(parts[argCount]);
       }
       pw.println(";");
-      
+
       pw.println("  }-*/;");
       pw.println("}");
       context.commit(logger, pw);

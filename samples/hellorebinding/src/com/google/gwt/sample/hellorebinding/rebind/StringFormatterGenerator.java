@@ -46,7 +46,7 @@ public class StringFormatterGenerator extends ParameterizedGenerator {
     }
 
     JArgument arg0 = arguments[0];
-    
+
     if (!((arg0 instanceof JOpaqueArgument) || (arg0 instanceof JStringArgument))) {
       logger.log(TreeLogger.ERROR, "Format argument must be a String literal or reference");
       throw new UnableToCompleteException();
@@ -86,13 +86,13 @@ public class StringFormatterGenerator extends ParameterizedGenerator {
       pw.printf("package %s;\n\n", packageName);
       pw.printf("import %s;\n\n", GWT.class.getCanonicalName());
       pw.printf("public class %s implements StringFormatter {\n\n", formatterTypeName);
-      
+
       pw.println("  private final String[] arguments;");
       pw.println();
-      
+
       pw.printf("  public %s(String format, String[] arguments) {\n", formatterTypeName);
       pw.println("    this.arguments = arguments;");
-      pw.println("  }");      
+      pw.println("  }");
       pw.println();
 
       pw.printf("  @Override public String format() {\n");
