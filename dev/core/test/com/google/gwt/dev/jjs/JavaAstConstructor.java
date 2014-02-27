@@ -88,6 +88,8 @@ public class JavaAstConstructor {
       code.append("  public static native boolean isNotNull(Object a) /*-{ }-*/;\n");
       code.append("  public static native boolean jsEquals(Object a, Object b) /*-{ }-*/;\n");
       code.append("  public static native boolean jsNotEquals(Object a, Object b) /*-{ }-*/;\n");
+      code.append("  public static int narrow_int(double x) { return 0; }\n");
+      code.append("  public static byte narrow_long(double x) { return 0; }\n");
       code.append("}\n");
       return code;
     }
@@ -178,7 +180,6 @@ public class JavaAstConstructor {
           return code;
         }
       };
-
       
   public static final MockJavaResource REBIND = new MockJavaResource(
       "com.google.gwt.core.shared.Rebind") {
@@ -209,6 +210,20 @@ public class JavaAstConstructor {
       return code;
     }
   };
+
+  public static final MockJavaResource LONGLIB =
+      new MockJavaResource("com.google.gwt.lang.LongLib") {
+        @Override
+        public CharSequence getContent() {
+          StringBuilder code = new StringBuilder();
+          code.append("package com.google.gwt.lang;\n");
+          code.append("public final class LongLib {\n");
+          code.append("  public static String toString(long a) { return \"\";}");
+          code.append("}\n");
+          return code;
+        }
+      };
+
   public static final MockJavaResource RUNASYNCCALLBACK = new MockJavaResource(
       "com.google.gwt.core.client.RunAsyncCallback") {
     @Override
@@ -275,7 +290,7 @@ public class JavaAstConstructor {
     result.remove(JavaResourceBase.CLASS);
     result.remove(JavaResourceBase.ENUM);
     Collections.addAll(result, ASYNCFRAGMENTLOADER, ARRAY, CAST, CLASS, CLASSLITERALHOLDER, ENUM,
-        GWT, GWT_SHARED, REBIND, REBINDINGFACTORY, RUNASYNCCALLBACK, RUNASYNCCODE);
+        GWT, GWT_SHARED, LONGLIB, REBIND, REBINDINGFACTORY, RUNASYNCCALLBACK, RUNASYNCCODE);
     return result.toArray(new MockJavaResource[result.size()]);
   }
 }
